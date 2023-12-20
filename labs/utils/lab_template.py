@@ -8,19 +8,20 @@ from .lab import Lab
 
 
 class LabTemplate(ABC):
-    subclasses: list[type["LabTemplate"]] = list()
+    subclasses: dict[int, type["LabTemplate"]] = dict()
 
     def __init_subclass__(cls, *args, **kwargs):
-        """This method essentially creates a list of all subclasses
-        This is allows us to easily assign yaml tags
-        """
+        """This method essentially creates a list of all subclasses"""
 
         super().__init_subclass__(*args, **kwargs)
-        cls.subclasses.append(cls)
-        ids = [x.lab_template_id for x in cls.subclasses]
-        assert len(ids) == len(set(ids)), "Lab template IDs not unique"
+        pre_existing_cls = cls.subclasses.get(cls.lab_template_id)  # type: ignore
+        msg = f"Not unique {pre_existing_cls} {cls}"
+        assert not pre_existing_cls or pre_existing_cls.__name__ == cls.__name__, msg
+        cls.subclasses[cls.lab_template_id] = cls  # type: ignore
 
-    def __init__(self, generated_dir: Path = Path.home() / "generated_labs"):
+    def __init__(
+        self, generated_dir: Path = Path.home() / "Desktop" / "generated_labs"
+    ):
         self.generated_dir: Path = generated_dir
 
     def _zip_temp_lab_dir_and_read(self) -> bytes:

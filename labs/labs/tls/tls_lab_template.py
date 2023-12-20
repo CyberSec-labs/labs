@@ -514,3 +514,7 @@ class TLSLabTemplate(LabTemplate):
     @cached_property
     def invalid_chain_key_path(self) -> Path:
         return self.invalid_chain_cert_dir / "key.pem"
+
+
+if __name__ == "__main__":
+    TLSLabTemplate().generate_lab()
