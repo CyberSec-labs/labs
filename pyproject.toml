@@ -1,0 +1,145 @@
+[build-system]
+requires = ["setuptools>=51.0", "wheel"]
+build-labs = "setuptools.build_meta"
+
+[project]
+name = "labs"
+version = "0.0.0"
+description = "Backend for Amir Herzberg's labs"
+readme = "README.md"
+authors = [
+    {name = "Justin", email = "jfuruness@gmail.com"}
+    {name = "Dustin", email = "dustin_rey.binalla@uconn.edu"},
+]
+license = {file = "LICENSE.txt"}
+keywords = ["Herzberg"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Environment :: Console",
+    "License :: OSI Approved :: BSD License",
+    "Intended Audience :: Developers"
+]
+dependencies = [
+    'email-validator==2.1.0.post1',
+    'fastapi==0.105.0',
+    'frozendict==2.3.10',
+    'passlib[bcrypt]==1.7.4',
+    'python-jose[cryptography]==3.3.0',
+    'python-multipart==0.0.6',
+    'starlette[full]~=0.27',
+    'uvicorn==0.24.0.post1',
+]
+# Needed for sqlite3 autocommit param when connecting
+requires-python = ">= 3.12"
+
+[project.scripts]
+labs = "labs.__main__:main"
+
+[project.optional-dependencies]
+test = [
+    "black==23.11.0",
+    "pre-commit==3.6.0",
+    "types-requests==2.31.0",
+    "mypy==1.7.0",
+    "tox==4.11.4",
+    "pytest-cov==4.1.0",
+    "ruff==0.1.7"
+]
+
+[project.urls]
+repository = "https://github.com/jfuruness/labs"
+
+
+[tool.mypy]
+mypy_path = "labs"
+check_untyped_defs = true
+disallow_any_generics = true
+ignore_missing_imports = true
+no_implicit_optional = true
+show_error_codes = true
+strict_equality = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+no_implicit_reexport = true
+
+[flake8]
+max-line-length = 88
+
+[tool.pytest.ini_options]
+python_files = ["test*.py"]
+python_classes = ["Test*"]
+python_functions = ["test*"]
+addopts = "--cov=labs --cov-report=term-missing"
+markers = [
+    "slow",  # All slow tests
+    "auth_endpoints",  # All auth endpoints
+    "lab_endpoints", # all lab endpoints
+]
+filterwarnings = [
+    "ignore::DeprecationWarning"
+]
+
+[tool.coverage.run]
+branch = true
+omit = [
+    "*tests*",
+    "*__init__*",
+    # This is just running the app
+    # both hard to test with very little value
+    # and also an entry point
+    "*__main__*",
+]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+
+# https://github.com/ymyzk/tox-gh-actions#tox-gh-actions-configuration
+# Tox doesn't support things like github actions, so we need to set it
+# to something like this
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+minversion = 3.12.0
+envlist = python3.12, ruff, black, mypy
+isolated_build = True
+
+[gh-actions]
+python =
+    3.12: python3.12, ruff, black, mypy
+
+
+[testenv]
+setenv = PYTHONPATH = {toxinidir}
+# https://stackoverflow.com/a/61885242/8903959
+extras=test
+commands = pytest labs --basetemp={envtmpdir} -m "not slow"
+
+[testenv:flake8]
+basepython = python3.12
+deps = flake8
+commands = flake8 labs
+
+[testenv:mypy]
+basepython = python3.12
+extras=test
+commands = mypy labs
+
+[testenv:ruff]
+basepython = python3.12
+deps = ruff
+commands = ruff labs
+
+[testenv:black]
+basepython = python3.12
+deps = black
+commands = black labs
+"""
