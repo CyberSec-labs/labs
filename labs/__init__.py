@@ -4,11 +4,7 @@ from .labs import (
     lab_templates,
 )
 
-from .utils import (
-    Grade,
-    Lab,
-    LabTemplate
-)
+from .utils import Grade, Lab, LabTemplate
 
 __all__ = [
     "lab_templates",

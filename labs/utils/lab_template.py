@@ -2,11 +2,7 @@ from abc import abstractmethod, ABC
 from functools import cached_property
 from pathlib import Path
 import shutil
-from tempfile import TemporaryDirectory
-from typing import Any
-import uuid
 
-from .database import BackendDB
 from .grade import Grade
 from .lab import Lab
 
@@ -26,12 +22,6 @@ class LabTemplate(ABC):
 
     def __init__(self, generated_dir: Path = Path.home() / "generated_labs"):
         self.generated_dir: Path = generated_dir
-
-    def run(self, user_id: int, db: BackendDB) -> Lab:
-        """Generates a lab, stores it in the database, and returns it"""
-
-        lab = self.generate_lab(user_id=user_id, seed=str(uuid.uuid4()))
-        return lab
 
     def _zip_temp_lab_dir_and_read(self) -> bytes:
         """Zips the generated_dir and reads it as bytes for db insertion"""

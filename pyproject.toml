@@ -8,8 +8,8 @@ version = "0.0.0"
 description = "Backend for Amir Herzberg's labs"
 readme = "README.md"
 authors = [
-    {name = "Justin", email = "jfuruness@gmail.com"}
-    {name = "Dustin", email = "dustin_rey.binalla@uconn.edu"},
+    {name = "Justin", email = "jfuruness@gmail.com"},
+    {name = "Dustin", email = "dustin_rey.binalla@uconn.edu"}
 ]
 license = {file = "LICENSE.txt"}
 keywords = ["Herzberg"]
@@ -20,20 +20,10 @@ classifiers = [
     "Intended Audience :: Developers"
 ]
 dependencies = [
-    'email-validator==2.1.0.post1',
-    'fastapi==0.105.0',
     'frozendict==2.3.10',
-    'passlib[bcrypt]==1.7.4',
-    'python-jose[cryptography]==3.3.0',
-    'python-multipart==0.0.6',
-    'starlette[full]~=0.27',
-    'uvicorn==0.24.0.post1',
 ]
 # Needed for sqlite3 autocommit param when connecting
 requires-python = ">= 3.12"
-
-[project.scripts]
-labs = "labs.__main__:main"
 
 [project.optional-dependencies]
 test = [

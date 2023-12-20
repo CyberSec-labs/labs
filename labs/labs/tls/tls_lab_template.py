@@ -331,6 +331,7 @@ class TLSLabTemplate(LabTemplate):
     @cached_property
     def cert_dir(self) -> Path:
         cert_dir = self.temp_lab_dir / "certs"
+        assert isinstance(cert_dir, Path), "for mypy"
         cert_dir.mkdir(exist_ok=True, parents=True)
         return cert_dir
 
