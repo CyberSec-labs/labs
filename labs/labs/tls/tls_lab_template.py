@@ -4,7 +4,7 @@ import random
 import shutil
 import subprocess
 
-from backend.utils import Grade, LabTemplate, Lab
+from labs.utils import Grade, LabTemplate, Lab
 
 
 class TLSLabTemplate(LabTemplate):
