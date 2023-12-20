@@ -77,7 +77,7 @@ class TLSLabTemplate(LabTemplate):
                 shutil.move(str(cert_dir_path), str(cert_dir_path.parent / str(i)))
 
         # Copy the question folder into the directory that will be given to users
-        self._copy_q_dir_into_lab_temp_dir()
+        self._copy_q_dir_into_lab_generated_dir()
 
         return Lab(
             lab_template_id=self.lab_template_id,
