@@ -53,7 +53,7 @@ class TLSLabTemplate(LabTemplate):
                 feedback = f"Missed {missed} certs, try again :)"
             return Grade(score=score, feedback=feedback)
 
-    def generate_lab(self, *, user_id: int, seed: str, debug: bool = False) -> Lab:
+    def generate_lab(self, *, user_id: int, seed: str, debug: bool = False) -> Lab:  # type: ignore
         # Generate all certs
         self.gen_all_certs()
         # Shuffle certs to get solution
