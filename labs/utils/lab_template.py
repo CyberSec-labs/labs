@@ -2,6 +2,7 @@ from abc import abstractmethod, ABC
 from functools import cached_property
 from pathlib import Path
 import shutil
+from typing import Optional
 
 from .grade import Grade
 from .lab import Lab
@@ -19,9 +20,11 @@ class LabTemplate(ABC):
         assert not pre_existing_cls or pre_existing_cls.__name__ == cls.__name__, msg
         cls.subclasses[cls.lab_template_id] = cls  # type: ignore
 
-    def __init__(
-        self, generated_dir: Path = Path.home() / "Desktop" / "generated_labs"
-    ):
+    def __init__(self, generated_dir: Optional[Path] = None) -> None:
+        if generated_dir is None:
+            generated_dir = (
+                Path.home() / "Desktop" / "generated_labs" / self.__class__.__name__
+            )
         self.generated_dir: Path = generated_dir
 
     def _zip_temp_lab_dir_and_read(self) -> bytes:
