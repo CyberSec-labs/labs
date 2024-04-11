@@ -2,7 +2,8 @@ from abc import abstractmethod, ABC
 from functools import cached_property
 from pathlib import Path
 import shutil
-from typing import Optional
+
+from fastapi import UploadFile
 
 from .grade import Grade
 from .lab import Lab
@@ -15,23 +16,23 @@ class LabTemplate(ABC):
         """This method essentially creates a list of all subclasses"""
 
         super().__init_subclass__(*args, **kwargs)
-        pre_existing_cls = cls.subclasses.get(cls.lab_template_id)  # type: ignore
+        pre_existing_cls = cls.subclasses.get(
+            cls.lab_template_id)  # type: ignore
         msg = f"Not unique {pre_existing_cls} {cls}"
         assert not pre_existing_cls or pre_existing_cls.__name__ == cls.__name__, msg
         cls.subclasses[cls.lab_template_id] = cls  # type: ignore
 
-    def __init__(self, generated_dir: Optional[Path] = None) -> None:
-        if generated_dir is None:
-            generated_dir = (
-                Path.home() / "Desktop" / "generated_labs" / self.__class__.__name__
-            )
+    def __init__(
+        self, generated_dir: Path = Path.home() / "Desktop" / "generated_labs"
+    ):
         self.generated_dir: Path = generated_dir
 
     def _zip_temp_lab_dir_and_read(self) -> bytes:
         """Zips the generated_dir and reads it as bytes for db insertion"""
 
         # https://stackoverflow.com/a/25650295/8903959
-        shutil.make_archive(str(self.zipped_lab_path), "zip", str(self.temp_lab_dir))
+        shutil.make_archive(str(self.zipped_lab_path),
+                            "zip", str(self.temp_lab_dir))
         # For some reason this is .zip.zip due to shutil
         # Could be fixed, but it's also fine
         with Path(str(self.zipped_lab_path) + ".zip").open("rb") as f:
@@ -76,13 +77,14 @@ class LabTemplate(ABC):
 
     @classmethod
     def grade(
-        cls: type["LabTemplate"], submitted_solution: str, solution: str
+        cls: type["LabTemplate"], submitted_solution: str, solution: str, files: UploadFile
     ) -> Grade:
         """Grades a submissions"""
 
         try:
-            return cls._grade(submitted_solution, solution)
-        except Exception:
+            return cls._grade(submitted_solution, solution, files)
+        except Exception as e:
+            print(e)
             return Grade(score=0, feedback="Error when grading assignment")
 
     @staticmethod
