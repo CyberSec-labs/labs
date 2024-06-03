@@ -5,28 +5,32 @@
 
 This package creates a FastAPI service to use as a labs for Dr. Herzberg's cybersecurity books with SQL as a database.
 
-* [Description](#package-description)
-* [Usage](#usage)
-* [Installation](#installation)
-* [Testing](#testing)
-* [Development/Contributing](#developmentcontributing)
-* [Credits](#credits)
-* [Licence](#license)
+- [labs](#labs)
+  - [Package Description](#package-description)
+  - [Usage](#usage)
+      - [For developers: How to add a lab](#for-developers-how-to-add-a-lab)
+  - [Installation](#installation)
+  - [Testing](#testing)
+  - [Development/Contributing](#developmentcontributing)
+  - [Credits](#credits)
+  - [License](#license)
 
 ## Package Description
 
 
 This package creates a FastAPI service to use as a labs for Dr. Herzberg's cybersecurity books with SQL as a database.
 
+Downloading the source via github will enable you to run each lab file locally. They boast full functionality, being able to generate and grade labs as needed for someone learning on their own.
+
 ## Usage
 * [labs](#labs)
 
-Post installation, you can simply cd into any directory, and run the lab_template file with python
+Post installation, you can simply cd into any directory, and run the main.py file with python
 This should generate the labs for you.
 
 #### For developers: How to add a lab
 
-Labs are placed within labs/labs/labs.
+Labs are placed within labs/src/labs.
 After seeding the lab, it is given a specific lab_template_id, which is later used in the LabTemplate subclass.
 Each lab has a questions folder, a solutions folder, and a lab_template.py file containing a subclass of LabTemplate
 LabTemplate must generate a unique lab for each student.
