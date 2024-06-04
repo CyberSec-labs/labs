@@ -65,7 +65,7 @@ A completed example of the flag system is as follows:
 ```bash
 python3 src/labs/DownloadLab/main.py gen --out 'some directory' -> for generating to a specific directory
 
-python3 src/labs/DownloadLab/main.py grade --out 'some directory/solution' -> for grading from a specific submission
+python3 src/labs/DownloadLab/main.py grade --in 'some directory' -> for grading from a specific submission
 ```
 
 #### For developers: How to add a lab
