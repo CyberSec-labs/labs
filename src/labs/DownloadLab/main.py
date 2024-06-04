@@ -14,7 +14,7 @@ from fastapi import UploadFile
 import zipfile
 import rsa
 
-from utils import Grade, LabTemplate, Lab
+from src.utils import Grade, LabTemplate, Lab
 
 
 def generateString(len):

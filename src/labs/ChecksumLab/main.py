@@ -13,8 +13,8 @@ from Crypto.Hash import SHA256
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES, PKCS1_OAEP
 from fastapi import UploadFile
-from utils import Grade, LabTemplate, Lab
-# from src.utils import Grade, LabTemplate, Lab
+# from utils import Grade, LabTemplate, Lab
+from src.utils import Grade, LabTemplate, Lab
 
 
 
