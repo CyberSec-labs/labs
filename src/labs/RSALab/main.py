@@ -12,7 +12,7 @@ from Crypto.PublicKey import RSA
 import rsa
 from Crypto.Cipher import PKCS1_OAEP
 
-from utils import Grade, LabTemplate, Lab
+from src.utils import Grade, LabTemplate, Lab
 
 # make sure you add pycryptodome!
 
