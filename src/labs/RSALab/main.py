@@ -11,6 +11,7 @@ from Crypto.PublicKey import RSA
 
 import rsa
 from Crypto.Cipher import PKCS1_OAEP
+from utils import cli
 
 from src.utils import Grade, LabTemplate, Lab
 
@@ -438,16 +439,19 @@ class spoof:
 
 def main(args: list[str]):
     args.pop(0)
-    if len(args) == 0:
-        print("No arguments specified, defaulting to new lab gen...")
-        RSALabTemplate().generate_lab()
-        return
     
     cmd = args[0]
+    settings = cli.CLIHandler.handle(args)
+    ## ============================================================ ##
+    if len(args) == 0:
+        print("No arguments specified, defaulting to new lab gen...")
+        RSALabTemplate(settings.destination).generate_lab()
+        return
+    
     if cmd == "gen":
-        RSALabTemplate().generate_lab()
+        RSALabTemplate(generated_dir=settings.destination).generate_lab()
     elif cmd == "grade":
-        destination = len(args) > 1 and args[1] or "./solutions"
+        destination = (settings.input is not None) and settings.input or "./solutions"
         if os.path.exists(destination) == False:
             print("Failed to get solutions folder. Either specify it via ./python main grade [folder path] or drag your solutions folder into the current working directory.")
             return

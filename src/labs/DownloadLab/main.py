@@ -14,7 +14,7 @@ from fastapi import UploadFile
 import zipfile
 import rsa
 
-from src.utils import Grade, LabTemplate, Lab
+from src.utils import Grade, LabTemplate, Lab, cli
 
 
 def generateString(len):
@@ -155,7 +155,6 @@ class DownloadLab(LabTemplate):
                 file_2.write(
                     random.randbytes(256)
                 )  # if we want the file sig to not match we just generate random bytes instead
-        print("ok" + qSolution[:-1])
         return qSolution[:-1]
 
     def sec3(self):
@@ -185,19 +184,23 @@ class spoof:
         self.file = f
         pass
 
+
+
 def main(args: list[str]):
     args.pop(0)
-    if len(args) == 0:
-        print("No arguments specified, defaulting to new lab gen...")
-        DownloadLab().generate_lab()
-        return
     
     cmd = args[0]
-
+    settings = cli.CLIHandler.handle(args)
+    ## ============================================================ ##
+    if len(args) == 0:
+        print("No arguments specified, defaulting to new lab gen...")
+        DownloadLab(settings.destination).generate_lab()
+        return
+    
     if cmd == "gen":
-        DownloadLab().generate_lab()
+        DownloadLab(generated_dir=settings.destination).generate_lab()
     elif cmd == "grade":
-        destination = len(args) > 1 and args[1] or "./solutions"
+        destination = (settings.input is not None) and settings.input or "./solutions"
         if os.path.exists(destination) == False:
             print("Failed to get solutions folder. Either specify it via ./python main grade [folder path] or drag your solutions folder into the current working directory.")
             return

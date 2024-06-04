@@ -1,8 +1,12 @@
 from functools import cached_property
+import os
 from pathlib import Path
 import random
 import shutil
 import subprocess
+import sys
+
+from utils import cli
 
 from src.utils import Grade, LabTemplate, Lab
 
@@ -531,5 +535,36 @@ class TLSLabTemplate(LabTemplate):
         return self.invalid_chain_cert_dir / "key.pem"
 
 
+class spoof:
+    def __init__(self, f) -> None:
+        self.file = f
+        pass
+
+def main(args: list[str]):
+    args.pop(0)
+    
+    cmd = args[0]
+    settings = cli.CLIHandler.handle(args)
+    ## ============================================================ ##
+    if len(args) == 0:
+        print("No arguments specified, defaulting to new lab gen...")
+        TLSLabTemplate(settings.destination).generate_lab()
+        return
+    
+    if cmd == "gen":
+        TLSLabTemplate(generated_dir=settings.destination).generate_lab()
+    elif cmd == "grade":
+        destination = (settings.input is not None) and settings.input or "./solutions"
+        if os.path.exists(destination) == False:
+            print("Failed to get solutions folder. Either specify it via ./python main grade [folder path] or drag your solutions folder into the current working directory.")
+            return
+        # if run locally, should use non random solutions
+        template = TLSLabTemplate().generate_lab().solution
+        toDelete = f"{os.getcwd()}/temp_solutions.zip"
+        shutil.make_archive("temp_solutions", 'zip', base_dir=destination, root_dir=os.getcwd())
+        with open(toDelete, "rb") as f:
+            print(TLSLabTemplate().grade("", template, spoof(f)))
+        os.remove(toDelete)
+
 if __name__ == "__main__":
-    TLSLabTemplate().generate_lab()
+    main(sys.argv)
