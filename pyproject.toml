@@ -8,22 +8,23 @@ version = "0.0.1"
 description = "Backend for Amir Herzberg's labs"
 readme = "README.md"
 authors = [
-    {name = "Justin", email = "jfuruness@gmail.com"},
-    {name = "Dustin", email = "dustin_rey.binalla@uconn.edu"}
+    { name = "Justin", email = "jfuruness@gmail.com" },
+    { name = "Dustin", email = "dustin_rey.binalla@uconn.edu" },
 ]
-license = {file = "LICENSE.txt"}
+license = { file = "LICENSE.txt" }
 keywords = ["Herzberg"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Environment :: Console",
     "License :: OSI Approved :: BSD License",
-    "Intended Audience :: Developers"
-]
-dependencies = [
-    'frozendict==2.3.10',
+    "Intended Audience :: Developers",
 ]
 # Needed for sqlite3 autocommit param when connecting
 requires-python = ">= 3.12"
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["abstract-dependencies.txt"] }
 
 [project.optional-dependencies]
 test = [
@@ -33,12 +34,11 @@ test = [
     "mypy==1.7.0",
     "tox==4.11.4",
     "pytest-cov==4.1.0",
-    "ruff==0.1.7"
+    "ruff==0.1.7",
 ]
 
 [project.urls]
 repository = "https://github.com/jfuruness/labs"
-
 
 [tool.mypy]
 mypy_path = "labs"
@@ -63,13 +63,11 @@ python_classes = ["Test*"]
 python_functions = ["test*"]
 addopts = "--cov=labs --cov-report=term-missing"
 markers = [
-    "slow",  # All slow tests
-    "auth_endpoints",  # All auth endpoints
-    "lab_endpoints", # all lab endpoints
+    "slow",           # All slow tests
+    "auth_endpoints", # All auth endpoints
+    "lab_endpoints",  # all lab endpoints
 ]
-filterwarnings = [
-    "ignore::DeprecationWarning"
-]
+filterwarnings = ["ignore::DeprecationWarning"]
 
 [tool.coverage.run]
 branch = true
