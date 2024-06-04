@@ -57,7 +57,7 @@ pip3 install pip --upgrade
 pip3 install wheel
 git clone https://github.com/jfuruness/labs.git
 cd labs
-pip3 install -e .[test]
+pip3 install -e .
 ```
 
 To test the development package: [Testing](#testing)
