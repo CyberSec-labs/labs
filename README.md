@@ -7,9 +7,9 @@ This package creates a FastAPI service to use as a labs for Dr. Herzberg's cyber
 
 - [labs](#labs)
   - [Package Description](#package-description)
+  - [Installation](#installation)
   - [Usage](#usage)
       - [For developers: How to add a lab](#for-developers-how-to-add-a-lab)
-  - [Installation](#installation)
   - [Testing](#testing)
   - [Development/Contributing](#developmentcontributing)
   - [Credits](#credits)
@@ -21,27 +21,6 @@ This package creates a FastAPI service to use as a labs for Dr. Herzberg's cyber
 This package creates a FastAPI service to use as a labs for Dr. Herzberg's cybersecurity books with SQL as a database.
 
 Downloading the source via github will enable you to run each lab file locally. They boast full functionality, being able to generate and grade labs as needed for someone learning on their own.
-
-## Usage
-* [labs](#labs)
-
-Post installation, you can simply cd into any directory, and run the main.py file with python
-This should generate the labs for you.
-
-#### For developers: How to add a lab
-
-Labs are placed within labs/src/labs.
-After seeding the lab, it is given a specific lab_template_id, which is later used in the LabTemplate subclass.
-Each lab has a questions folder, a solutions folder, and a lab_template.py file containing a subclass of LabTemplate
-LabTemplate must generate a unique lab for each student.
-LabTemplate saves the seed used for this, along with the solution, and a few other items, which can then be used for each individual student.
-You can see a list of abstract methods that need to be implemented in the labs/labs/utils/lab_template.py file.
-You can also see an example of this implementation in labs/labs/labs/tls/
-
-NOTE: once you have implemented your lab, you must add an ```__init__.py``` file.
-You also must modify ```labs/labs/labs/__init_.py``` file so that your lab template is both imported and added to the lab_templates tuple that exists within that file
-
-Other than that, you should be good to go!
 
 
 ## Installation
@@ -61,6 +40,48 @@ pip3 install -e .
 ```
 
 To test the development package: [Testing](#testing)
+
+
+## Usage
+* [labs](#labs)
+
+Once installed, to generate a lab locally, cd into a given folder (ie: src/labs/DownloadLab) and run main.py
+
+This automatically generated the selected lab files and instructions.
+
+Additionally, you there are several flags you can use to configure output. To specify a flag prefix it with two dashes ("--") plus the flag name. 
+
+A list of available flags is shown below.
+
+| Flag              | Description | Value |
+| :---------------- | :-------------------------------------------: | ----: |
+| out               |   Sets the output directory when generating a lab to a specified one.   | any valid path/directory |
+| in                |   Sets the directory to look for solutions when attempting to grade a lab   | any valid path/directory |
+ 
+
+If you want to use the flag system you need to specify the mode in which you are running the lab file. There are currently two modes, gen, and grade. Gen generates the lab files, and grade looks for a solution folder to grade against it's automatic grading scheme. 
+
+A completed example of the flag system is as follows:
+```bash
+python3 src/labs/DownloadLab/main.py gen --out 'some directory' -> for generating to a specific directory
+
+python3 src/labs/DownloadLab/main.py grade --out 'some directory/solution' -> for grading from a specific submission
+```
+
+#### For developers: How to add a lab
+
+Labs are placed within labs/src/labs.
+After seeding the lab, it is given a specific lab_template_id, which is later used in the LabTemplate subclass.
+Each lab has a questions folder, a solutions folder, and a lab_template.py file containing a subclass of LabTemplate
+LabTemplate must generate a unique lab for each student.
+LabTemplate saves the seed used for this, along with the solution, and a few other items, which can then be used for each individual student.
+You can see a list of abstract methods that need to be implemented in the labs/labs/utils/lab_template.py file.
+You can also see an example of this implementation in labs/labs/labs/tls/
+
+NOTE: once you have implemented your lab, you must add an ```__init__.py``` file.
+You also must modify ```labs/labs/labs/__init_.py``` file so that your lab template is both imported and added to the lab_templates tuple that exists within that file
+
+Other than that, you should be good to go!
 
 
 ## Testing
