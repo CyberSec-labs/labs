@@ -132,8 +132,8 @@ class RSALabTemplate(LabTemplate):
             )
 
         # For question one, we expect one file
-#mx1a,
-#mx1b, mx1c, my1a, my1b, and my1c
+        #mx1a,
+        #mx1b, mx1c, my1a, my1b, and my1c
         if submittedSolution[0] == expectedSolutions[0]:
             score = score + 20
 

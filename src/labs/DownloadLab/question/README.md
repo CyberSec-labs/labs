@@ -1,7 +1,6 @@
 
 # Lab 1 - Download Lab
-This lab has three parts. 
-You're also given the file Internet_Checksum.py. This file contains the method toInternetChecksum(s: string). It returns a string, which is the hash of the string.
+This lab has three parts.
 
 ## Question 1
 For question 1, locate the following files in the `Q1files` subdirectory:

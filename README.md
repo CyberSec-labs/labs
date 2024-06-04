@@ -54,10 +54,9 @@ Additionally, there are several flags you can use to configure output. To specif
 A list of available flags is shown below.
 
 | Flag              | Description | Value |
-| :---------------- | :-------------------------------------------: | ----: |
+| :---------------- | :-------------------------------------------: | --------: |
 | out               |   Sets the output directory when generating a lab to a specified one.   | any valid path/directory |
 | in                |   Sets the directory to look for solutions when attempting to grade a lab   | any valid path/directory |
- 
 
 If you want to use the flag system you need to specify the mode in which you are running the lab file. There are currently two modes, gen, and grade. Gen generates the lab files, and grade looks for a solution folder to grade against it's automatic grading scheme. 
 
