@@ -49,7 +49,7 @@ Once installed, to generate a lab locally, cd into a given folder (ie: src/labs/
 
 This automatically generated the selected lab files and instructions.
 
-Additionally, you there are several flags you can use to configure output. To specify a flag prefix it with two dashes ("--") plus the flag name. 
+Additionally, there are several flags you can use to configure output. To specify a flag prefix it with two dashes ("--") plus the flag name. 
 
 A list of available flags is shown below.
 
