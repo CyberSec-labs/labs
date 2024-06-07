@@ -1,0 +1,7 @@
+This is not the order of the chapters, just the index number in the database.
+TLS Lab - index 0
+DownloadLab - index 1
+Ransomware and Encryption Lab - index 2
+ChecksumLab - index 3
+RSA Lab - index 4
+PasswordLab - index 5

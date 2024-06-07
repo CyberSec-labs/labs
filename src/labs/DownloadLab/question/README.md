@@ -20,7 +20,7 @@ For question 2, locate the following files in your `Q2files` subdirectory:
 
 The catch is that only half of the signature files are actually correct. 
 
-Your task is to identify which file-signature pairs actually match and submit the text files only in your submissions folder.
+Your task is to identify which file-signature pairs actually match and submit the text files only in your submissions folder. Drag the text file of the matching signatures into your submissions folder and just submit that to either the website or specify the folder as your input when using the autograde locally.
 
 ## Question 3
 Question 3 is optional.
