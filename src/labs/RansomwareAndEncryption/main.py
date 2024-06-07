@@ -14,7 +14,7 @@ from fastapi import UploadFile
 import zipfile
 import rsa
 
-from src.utils import Grade, LabTemplate, Lab
+from src.utils import Grade, LabTemplate, Lab, CLIHandler
 
 
 def generateString(len):
@@ -164,7 +164,7 @@ def main(args: list[str]):
     args.pop(0)
     
     cmd = args[0]
-    settings = cli.CLIHandler.handle(args)
+    settings = CLIHandler.handle(args)
     ## ============================================================ ##
     if len(args) == 0:
         print("No arguments specified, defaulting to new lab gen...")

@@ -13,9 +13,8 @@ from Crypto.Hash import SHA256
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES, PKCS1_OAEP
 from fastapi import UploadFile
-from utils import cli
 # from utils import Grade, LabTemplate, Lab
-from src.utils import Grade, LabTemplate, Lab
+from src.utils import Grade, LabTemplate, Lab, CLIHandler
 
 
 
@@ -156,7 +155,7 @@ class Lab3LabTemplate(LabTemplate):
 
         return Grade(score=score, feedback=feedback)
 
-    def generate_lab(self, *, user_id: int = 0, seed: str = "", debug: bool = False) -> Lab:  # type: ignore
+    def generate_lab(self, *, user_id: int = 0, seed: str = "abcd", debug: bool = False) -> Lab:  # type: ignore
         random.seed(seed)
 
         for i in range(4):
@@ -269,7 +268,7 @@ def main(args: list[str]):
     args.pop(0)
     
     cmd = args[0]
-    settings = cli.CLIHandler.handle(args)
+    settings = CLIHandler.handle(args)
 
     if len(args) == 0:
         print("No arguments specified, defaulting to new lab gen...")

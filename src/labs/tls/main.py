@@ -6,9 +6,7 @@ import shutil
 import subprocess
 import sys
 
-from utils import cli
-
-from src.utils import Grade, LabTemplate, Lab
+from src.utils import Grade, LabTemplate, Lab, CLIHandler
 
 
 class TLSLabTemplate(LabTemplate):
@@ -58,7 +56,8 @@ class TLSLabTemplate(LabTemplate):
                 feedback = f"Missed {missed} certs, try again :)"
             return Grade(score=score, feedback=feedback)
 
-    def generate_lab(self, *, user_id: int = 0, seed: str = "", debug: bool = False) -> Lab:  # type: ignore
+    def generate_lab(self, *, user_id: int = 0, seed: str = "abcd", debug: bool = False) -> Lab:  # type: ignore
+        random.seed(seed)
         # Generate all certs
         self.gen_all_certs()
         # Shuffle certs to get solution
@@ -544,7 +543,7 @@ def main(args: list[str]):
     args.pop(0)
     
     cmd = args[0]
-    settings = cli.CLIHandler.handle(args)
+    settings = CLIHandler.handle(args)
     ## ============================================================ ##
     if len(args) == 0:
         print("No arguments specified, defaulting to new lab gen...")

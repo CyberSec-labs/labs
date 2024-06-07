@@ -14,7 +14,7 @@ from fastapi import UploadFile
 import zipfile
 import rsa
 
-from src.utils import Grade, LabTemplate, Lab, cli
+from src.utils import Grade, LabTemplate, Lab, CLIHandler
 
 
 def generateString(len):
@@ -82,7 +82,10 @@ class DownloadLab(LabTemplate):
 
         return Grade(score=score, feedback="na")
 
-    def generate_lab(self, *, user_id: int = 0, seed: str = "", debug: bool = False) -> Lab:  # type: ignore
+    def generate_lab(self, *, user_id: int = 0, seed: str = "abcd", debug: bool = False) -> Lab:  # type: ignore
+
+        random.seed(seed)
+
         q1Solution = self.sec1()
         q2Solution = self.sec2()
         self.sec3()
@@ -146,7 +149,7 @@ class DownloadLab(LabTemplate):
             # get a string to put for our file
             fileContents = generateString(25)
             hasher = SHA256.new(fileContents.encode("utf-8"))
-            file_1.write(hasher.digest())
+            file_1.write(fileContents.encode("utf-8"))
             if i in isTrue:  # if the file sig will match, calculate file signature
                 signed = signer.sign(hasher)
                 file_2.write(signed)
@@ -155,6 +158,7 @@ class DownloadLab(LabTemplate):
                 file_2.write(
                     random.randbytes(256)
                 )  # if we want the file sig to not match we just generate random bytes instead
+        print(qSolution)
         return qSolution[:-1]
 
     def sec3(self):
@@ -190,7 +194,7 @@ def main(args: list[str]):
     args.pop(0)
     
     cmd = args[0]
-    settings = cli.CLIHandler.handle(args)
+    settings = CLIHandler.handle(args)
     ## ============================================================ ##
     if len(args) == 0:
         print("No arguments specified, defaulting to new lab gen...")
