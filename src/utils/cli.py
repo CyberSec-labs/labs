@@ -45,6 +45,8 @@ class CLIHandler:
                         settings.destination = Path(value)
                 case "in":
                     settings.input = Path(value)
+                    print("New input")
+                    print(settings.input)
                 case _:
                     print(f"Unknown flag: '{flagName}' with value: '{value}'")
         

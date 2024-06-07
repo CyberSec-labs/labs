@@ -560,8 +560,14 @@ def main(args: list[str]):
         # if run locally, should use non random solutions
         template = TLSLabTemplate().generate_lab().solution
         toDelete = f"{os.getcwd()}/temp_solutions.zip"
-        shutil.make_archive("temp_solutions", 'zip', base_dir=destination, root_dir=os.getcwd())
-        with open(toDelete, "rb") as f:
+        a = shutil.make_archive(
+            base_name="temp_solutions",  # Name of the archive
+            format='zip',            # Format of the archive ('zip', 'tar', 'gztar', 'bztar', 'xztar')
+            root_dir=Path(destination).parent,     # Root directory to archive
+            base_dir=Path(destination).name,           # Base directory to be archived; use None to archive the entire root_dir
+            verbose=True             # Print status messages to stdout (optional)
+        )
+        with open(a, "rb") as f:
             print(TLSLabTemplate().grade("", template, spoof(f)))
         os.remove(toDelete)
 

@@ -37,15 +37,12 @@ class DownloadLab(LabTemplate):
     @staticmethod
     def _grade(submitted_solution: str, solution: str, file: UploadFile) -> Grade:
         """Grades a submissions
-
-        Give 25% for each correct cert
-        Submissions are supposed to be in the form of:
-        0_1_2_3
         """
         # section 1
 
         score = 0
         solutions = solution.split("_")
+        # print(file.file)
         files = zipfile.ZipFile(file.file)
         base_dir = files.filelist[0].filename
         feedback = ""
@@ -63,15 +60,17 @@ class DownloadLab(LabTemplate):
 
         # section 2
         """"""
-        expectedFiles = solution[1].split(".")
+        expectedFiles = solutions[1].split(".")
         correct = 0 
         list = 0
+        # print(files.read("1.txt"))
         for name in expectedFiles:
             list = list + 1
             try:
-                f = files.read(f"{base_dir}/{name}")
+                f = files.read(f"{base_dir}{name}.txt")
                 correct = correct + 1
-            except:
+            except Exception as ee:
+                print(ee)
                 pass
         
         if list != correct:
@@ -80,7 +79,7 @@ class DownloadLab(LabTemplate):
             feedback = feedback + f"Question 2 correct.\n"
         """"""
 
-        return Grade(score=score, feedback="na")
+        return Grade(score=score, feedback=feedback)
 
     def generate_lab(self, *, user_id: int = 0, seed: str = "abcd", debug: bool = False) -> Lab:  # type: ignore
 
@@ -211,8 +210,14 @@ def main(args: list[str]):
         # if run locally, should use non random solutions
         template = DownloadLab().generate_lab().solution
         toDelete = f"{os.getcwd()}/temp_solutions.zip"
-        shutil.make_archive("temp_solutions", 'zip', base_dir=destination, root_dir=os.getcwd())
-        with open(toDelete, "rb") as f:
+        a = shutil.make_archive(
+            base_name="temp_solutions",  # Name of the archive
+            format='zip',            # Format of the archive ('zip', 'tar', 'gztar', 'bztar', 'xztar')
+            root_dir=Path(destination).parent,     # Root directory to archive
+            base_dir=Path(destination).name,           # Base directory to be archived; use None to archive the entire root_dir
+            verbose=True             # Print status messages to stdout (optional)
+        )
+        with open(a, "rb") as f:
             print(DownloadLab().grade("", template, spoof(f)))
         os.remove(toDelete)
 
