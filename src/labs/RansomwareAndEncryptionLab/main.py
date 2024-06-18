@@ -10,6 +10,11 @@ import sys
 from Crypto.Signature import pkcs1_15
 from Crypto.PublicKey import RSA
 from Crypto.Hash import SHA256
+from Crypto.Util.Padding import pad
+from Crypto.Util.Padding import unpad
+from Crypto.PublicKey import RSA
+from Crypto.Random import get_random_bytes
+from Crypto.Cipher import AES, PKCS1_OAEP
 from fastapi import UploadFile
 import zipfile
 import rsa
@@ -64,12 +69,21 @@ class Lab2LabTemplate(LabTemplate):
         feedback = feedback + "Part 2 requires manual review."
         return Grade(score=score, feedback=feedback)
 
-    def generate_lab(self, *, user_id: int = 0, seed: str = "", debug: bool = False) -> Lab:  # type: ignore
-        q1Solution = self.sec1()
-        q2Solution = self.sec2()
+    def generate_lab(self, *, user_id: int = 0, seed: str = "abcd", debug: bool = False) -> Lab:  # type: ignore
+        random.seed(seed)
+        if not os.path.exists(f"{self.temp_lab_dir}/Q1"):
+            os.mkdir(f"{self.temp_lab_dir}/Q1")
+        if not os.path.exists(f"{self.temp_lab_dir}/Q2"):
+            os.mkdir(f"{self.temp_lab_dir}/Q2")
+        if not os.path.exists(f"{self.temp_lab_dir}/Q3"):
+            os.mkdir(f"{self.temp_lab_dir}/Q3")
+        q1Solution = self.sec1(seed)
+        q2Solution = self.sec2(seed)
+        q3Solution = self.sec3(seed)
+        # q2Solution = self.sec2()
 
         # Solution is valid, expired, invalid_ca, invalid_cn
-        solution = f"{q1Solution}_{q2Solution}"
+        solution = f"{q1Solution}"
         # Copy the question folder into the directory that will be given to users
         self._copy_q_dir_into_lab_generated_dir()
         return Lab(
@@ -80,20 +94,38 @@ class Lab2LabTemplate(LabTemplate):
             solution=solution,
         )
 
-    def sec1(self):
-        keyprivate = RSA.generate(2048)
-        keyprivate.public_key()
-
+    def sec1(self, original):
         insecureKey = random.randbytes(32)
         # this is for r1.py
         # it uses an insecure shared key to encrypt our seeds, and is not obfuscated.
         with open(f"{self.static_dir}/Malware Files/R1.py", "r") as template:
             patched = template.read()
             patched = patched.replace("INSECURE_ENCRYPTION_KEY", str(insecureKey))
-            with open(f"{self.temp_lab_dir}/R1.py", "w+") as f:
+            with open(f"{self.temp_lab_dir}/Q1/R1.py", "w+") as f:
                 f.write(patched)
                 f.close()
+            template.close()
 
+        seed_cipher = AES.new(insecureKey, AES.MODE_CBC)
+        seed = random.randbytes(32)
+        random.seed(seed)
+        encrypted_seed = seed_cipher.encrypt(pad(seed_cipher, AES.block_size))
+        cipher = AES.new(random.randbytes(32), AES.MODE_CBC)
+
+        with open(f"{self.temp_lab_dir}/Q1/Encrypted1.txt", "r+b") as f:
+            contents = f.read()
+            encrypted = cipher.encrypt(pad(contents, AES.block_size))
+            f.seek(0)
+            f.write(encrypted)
+            f.close()
+
+        with open(f"{self.temp_lab_dir}/Q1/Encrypted1.token.txt", "w+") as f:
+            f.write(str(encrypted_seed))
+            f.close()
+        
+        random.seed(original)
+    
+    def sec2(self):
         # this is for r2.py
         # uses the same insecure shared key encryption, but is obfuscated to a mild degree.
         insecureKey = random.randbytes(32)
@@ -103,7 +135,28 @@ class Lab2LabTemplate(LabTemplate):
             with open(f"{self.temp_lab_dir}/R2.py", "w+") as f:
                 f.write(patched)
                 f.close()
+            template.close()
 
+        seed_cipher = AES.new(insecureKey, AES.MODE_CBC)
+        seed = random.randbytes(32)
+        random.seed(seed)
+        encrypted_seed = seed_cipher.encrypt(pad(seed_cipher, AES.block_size))
+        cipher = AES.new(random.randbytes(32), AES.MODE_CBC)
+
+        with open(f"{self.temp_lab_dir}/Q1/Encrypted1.txt", "r+b") as f:
+            contents = f.read()
+            encrypted = cipher.encrypt(pad(contents, AES.block_size))
+            f.seek(0)
+            f.write(encrypted)
+            f.close()
+
+        with open(f"{self.temp_lab_dir}/Q1/Encrypted1.token.txt", "w+") as f:
+            f.write(str(encrypted_seed))
+            f.close()
+
+    def sec3(self):
+        keyprivate = RSA.generate(2048)
+        keyprivate.public_key()
         # r3.py uses a public/private key encryption scheme. it is much more secure.
         # r3 is not obfuscated as that would pose too much of a challenge for students
         with open(f"{self.static_dir}/Malware Files//R3.py", "r") as template:
@@ -114,46 +167,13 @@ class Lab2LabTemplate(LabTemplate):
             with open(f"{self.temp_lab_dir}/R3.py", "w+") as f:
                 f.write(patched)
                 f.close()
+            
         # our decryption template is the same across all malware files, so only write this once.
-
         with open(f"{self.static_dir}/D1.py", "rb") as decryption_template:
             with open(f"{self.temp_lab_dir}/D1.py", "w+b") as f:
                 f.write(decryption_template.read())
                 decryption_template.close()
                 f.close()
-
-    def sec2(self):
-        if not os.path.exists(f"{self.temp_lab_dir}/Q2files"):
-            os.mkdir(f"{self.temp_lab_dir}/Q2files")
-        key = RSA.generate(2048)
-        public = key.public_key()
-        signer = pkcs1_15.new(key)
-
-        with open(f"{self.temp_lab_dir}/Q2files/Q2pk.pem", "w+b") as f:
-            f.write(public.export_key())
-            f.close()
-
-        possible = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-        random.shuffle(possible)
-        print(possible[:5])
-        isTrue = possible[:5]
-        for i in range(10):
-            file_1 = open(f"{self.temp_lab_dir}/Q2files/{i}.txt", "w+b")
-            file_2 = open(f"{self.temp_lab_dir}/Q2files/{i}_sig.txt", "w+b")
-
-            # get a string to put for our file
-            fileContents = generateString(25)
-            hasher = SHA256.new(fileContents.encode("utf-8"))
-            file_1.write(hasher.digest())
-            if i in isTrue:  # if the file sig will match, calculate file signature
-                signed = signer.sign(hasher)
-                file_2.write(signed)
-            else:
-                file_2.write(
-                    random.randbytes(256)
-                )  # if we want the file sig to not match we just generate random bytes instead
-
-
 
 class spoof:
     def __init__(self, f) -> None:

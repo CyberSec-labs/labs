@@ -1,10 +1,10 @@
 from frozendict import frozendict
 
-from .RansomwareAndEncryption import Lab2LabTemplate
+from .RansomwareAndEncryptionLab import Lab2LabTemplate
 
 from .ChecksumLab import Lab3LabTemplate
 
-from .tls import TLSLabTemplate
+from .TLSLab import TLSLabTemplate
 
 from .DownloadLab import DownloadLab
 
