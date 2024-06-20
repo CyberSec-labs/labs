@@ -8,6 +8,8 @@ import sys
 import os
 from Crypto.PublicKey import RSA
 
+from fastapi import UploadFile
+import zipfile
 
 import rsa
 from Crypto.Cipher import PKCS1_OAEP
@@ -104,7 +106,7 @@ class RSALabTemplate(LabTemplate):
     static_dir: Path = Path(__file__).parent
 
     @staticmethod
-    def _grade(submitted_solution: str, solution: str) -> Grade:
+    def _grade(submitted_solution: str, solution: str, file: UploadFile) -> Grade:
         """Grades a submissions
 
         Give 25% for each correct cert
@@ -112,40 +114,70 @@ class RSALabTemplate(LabTemplate):
         0_1_2_3
         """
 
-        expectedSolutions = solution.split("_")
-        submittedSolution = solution.split("_")
+        solutions = solution.split('_')
+        for i in range(len(solutions)):
+            solutions[i] = solutions[i].split(";")
+        files = zipfile.ZipFile(file.file)
+        base_dir = files.filelist[0].filename
         feedback = ""
         # NOTE: should be question 1, 2, 3, 4.
 
-        grade = 0
+        score = 0
 
-        questionCounter = 1  # minus 1 to get our index solutions
+        # Question 1 
+        q1_files = ["mx1a", "mx1b", "mx1c", "my1a", "my1b", "my1c"]
+        for ind, foi in enumerate(q1_files):
+            try:
+                f = files.read(f"{base_dir}{foi}").decode("utf-8")
 
-        for questionIndex in range(4):
-            pass
+                if f == solutions[0][ind]:
+                    score += 3
+                else:
+                    feedback = feedback + f"File {foi} is incorrect.\n"
+            except KeyError:
+                feedback = feedback + f"Missing {foi} from uploaded zip archive.\n"
+        score+=score//9
 
-        if len(expectedSolutions) != len(submittedSolution):
-            return Grade(
-                score=0,
-                feedback=f"Missing solutions. Expected {len(expectedSolutions)}, got {len(submittedSolution)}.\n{submitted_solution}",
-            )
+        # Question 2
+        feedback += f'Question 2 manually graded.\n'
 
-        # For question one, we expect one file
-        #mx1a,
-        #mx1b, mx1c, my1a, my1b, and my1c
-        if submittedSolution[0] == expectedSolutions[0]:
-            score = score + 20
+        # Question 3
+        try:
+            f = files.read(f"{base_dir}pair0-2.csv").decode("utf-8")
+            print(f)
+            print(solutions[1][0])
+            if f == solutions[1][0]:
+                score += 20
+            else:
+                feedback = feedback + f"File pair0-2.csv is incorrect.\n"
+        except KeyError:
+            feedback = feedback + f"Missing pair0-2.csv from uploaded zip archive.\n"
+        # Question 4
+        '''
+        # Question 5
+        q5_files = ["pair2-2.csv", "pair3-2.csv", "pair4-2.csv", "pair5-2.csv", "pair6-2.csv"]
+        for ind, foi in enumerate(q5_files):
+            try:
+                f = files.read(f"{base_dir}{foi}").decode("utf-8")
+
+                if f == solutions[3][ind]:
+                    score += 4
+                else:
+                    feedback = feedback + f"File {foi} is incorrect.\n"
+            except KeyError:
+                feedback = feedback + f"Missing {foi} from uploaded zip archive.\n"
+        '''
 
         return Grade(score=score, feedback=feedback)
 
     def generate_lab(self, *, user_id: int = 0, seed: str = "abcd", debug: bool = False) -> Lab:  # type: ignore
 
         random.seed(seed)
-        solution = self.sec1()
+        solution1 = self.sec1()
         self.sec2()
-        self.sec3()
+        solution3, solution4, solution5 = self.sec3()
 
-        solution = "fix"
+        solution = f'{solution1}_{solution3}_{solution4}_{solution5}'
 
         return Lab(
             lab_template_id=self.lab_template_id,
@@ -168,6 +200,7 @@ class RSALabTemplate(LabTemplate):
         print("Plain1", cx1Plain)
         print("Plain2", cx2Plain)
         cipher = PKCS1_OAEP.new(publicKey, randfunc=random.randbytes)
+        solution = ""
 
         # CX
         # part a is textbook rsa, part b is with PKCS1.5 and part C is OAEP
@@ -175,32 +208,40 @@ class RSALabTemplate(LabTemplate):
             content = TextbookRSA.encrypt(bytes(cx1Plain, "utf-8"), publicKey)
             f.write(content)
             f.close()
+            solution+=f"{cx1Plain};"
 
         with open(f"{labInput}/cx1b", "wb") as f:
             content = rsa.encrypt(bytes(cx1Plain, "utf-8"), publicKey)
             f.write(content)
             f.close()
+            solution+=f"{cx1Plain};"
 
         with open(f"{labInput}/cx1c", "wb") as f:
             content = cipher.encrypt(bytes(cx1Plain, "utf-8"))
             f.write(content)
             f.close()
+            solution+=f"{cx1Plain};"
 
         # CY
         with open(f"{labInput}/cy1a", "wb") as f:
             content = TextbookRSA.encrypt(bytes(cx2Plain, "utf-8"), publicKey)
             f.write(content)
             f.close()
+            solution+=f"{cx2Plain};"
 
         with open(f"{labInput}/cy1b", "wb") as f:
             content = rsa.encrypt(bytes(cx2Plain, "utf-8"), publicKey)
             f.write(content)
             f.close()
+            solution+=f"{cx2Plain};"
 
         with open(f"{labInput}/cy1c", "wb") as f:
             content = cipher.encrypt(bytes(cx2Plain, "utf-8"))
             f.write(content)
             f.close()
+            solution+=f"{cx2Plain}"
+
+        
         boooool = random.random() < 0.5
         print(boooool)
         with open(f"{labInput}/ma1", "w") as f:
@@ -222,10 +263,15 @@ class RSALabTemplate(LabTemplate):
             f.write(str(keyPair.n))
             f.close()
 
+        return solution
+
     def sec2(self):
         pass
 
     def sec3(self):
+        solution3 = ""
+        solution4 = ""
+        solution5 = ""
 
         labInput = self.temp_lab_dir / "lab-input"
 
@@ -299,6 +345,8 @@ class RSALabTemplate(LabTemplate):
                     f.write(rsa.encrypt(para.encode("utf-8"), publicKey))
                     f.close()
                 matching_pair_3 = (ciphername, plainname)
+                if i == 0:
+                    solution3 += f"Plaintext,Ciphertext\nplaintext {matching_pair_3[1]}.txt,ciphertext {matching_pair_3[0]}.txt"
                 print("Continuining with", i)
                 continue
 
@@ -311,6 +359,7 @@ class RSALabTemplate(LabTemplate):
                 # this is because it doesn't always give me a valid utf8 byte that I can use unfortunately
                 # random.randbytes(1)
                 what = random.randint(0, 255)
+                print(what)
                 rByte = chr(what)
                 para = (b"\x02".decode() +
                         rByte)+fully
@@ -327,6 +376,8 @@ class RSALabTemplate(LabTemplate):
                         para.encode("utf-8"), publicKey))
                     f.close()
                 matching_pair_4 = (ciphername, plainname)
+                if i == 2:
+                    solution4 += f'Plaintext,Ciphertext\nplaintext {matching_pair_4[1]}.txt,ciphertext {matching_pair_4[0]}.txt'
                 continue
 
             ############################ QUESTION 5 ############################
@@ -345,26 +396,36 @@ class RSALabTemplate(LabTemplate):
                     print("Okay matching pairs ARE: ", ciphername,
                           plainname, b"\x05" + bytes(what, "utf-8"))
                     matching_pair_5 = (ciphername, plainname)
+                    if i == 4:
+                        solution5 += f'Plaintext,Ciphertext\nplaintext {matching_pair_5[1]}.txt,ciphertext {matching_pair_5[0]}.txt;'
                 if i == 6 or i == 7:
 
                     what = chr(random.randint(0, 255))
                     matching_pair_6 = (ciphername, plainname)
+                    if i == 6:
+                        solution5 += f'Plaintext,Ciphertext\nplaintext {matching_pair_6[1]}.txt,ciphertext {matching_pair_6[0]}.txt;'
                 if i == 8 or i == 9:
 
                     what = chr(random.randint(0, 255)) + \
                         chr(random.randint(0, 15))
                     matching_pair_7 = (ciphername, plainname)
+                    if i == 8:
+                        solution5 += f'Plaintext,Ciphertext\nplaintext {matching_pair_7[1]}.txt,ciphertext {matching_pair_7[0]}.txt;'
 
                 if i == 10 or i == 11:
                     what = chr(random.randint(0, 255)) + \
                         chr(random.randint(0, 255))
                     matching_pair_8 = (ciphername, plainname)
+                    if i == 10:
+                        solution5 += f'Plaintext,Ciphertext\nplaintext {matching_pair_8[1]}.txt,ciphertext {matching_pair_8[0]}.txt;'
 
                 if i == 12 or i == 13:
                     what = chr(random.randint(0, 255)) + \
                         chr(random.randint(0, 255)) + \
                         chr(random.randint(0, 15))
                     matching_pair_9 = (ciphername, plainname)
+                    if i == 12:
+                        solution5 += f'Plaintext,Ciphertext\nplaintext {matching_pair_9[1]}.txt,ciphertext {matching_pair_9[0]}.txt;'
 
                 para = (b"\x05" +
                         bytes(what, "utf-8"))+fully
@@ -431,6 +492,8 @@ class RSALabTemplate(LabTemplate):
             f.write(plaintextcsvFile)
             f.close()
 
+        return solution3, solution4, solution5
+
 class spoof:
     def __init__(self, f) -> None:
         self.file = f
@@ -465,7 +528,8 @@ def main(args: list[str]):
             verbose=True             # Print status messages to stdout (optional)
         )
         with open(a, "rb") as f:
-            print(RSALabTemplate().grade("", template, spoof(f)))
+            results= RSALabTemplate().grade("", template, spoof(f))
+            print(f'Score:\n{results.score}\nFeedback:\n{results.feedback}')
         os.remove(toDelete)
 
 if __name__ == "__main__":
