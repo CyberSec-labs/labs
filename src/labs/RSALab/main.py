@@ -120,7 +120,6 @@ class RSALabTemplate(LabTemplate):
         files = zipfile.ZipFile(file.file)
         base_dir = files.filelist[0].filename
         feedback = ""
-        # NOTE: should be question 1, 2, 3, 4.
 
         score = 0
 
@@ -139,26 +138,33 @@ class RSALabTemplate(LabTemplate):
         score+=score//9
 
         # Question 2
-        feedback += f'Question 2 manually graded.\n'
+        feedback += f'Question 2 manually graded for 20 points.\n'
 
         # Question 3
         try:
-            f = files.read(f"{base_dir}pair0-2.csv").decode("utf-8")
-            print(f)
-            print(solutions[1][0])
+            f = files.read(f"{base_dir}pair0-2.csv").decode("utf-8").split('\n')[1]
             if f == solutions[1][0]:
                 score += 20
             else:
                 feedback = feedback + f"File pair0-2.csv is incorrect.\n"
         except KeyError:
             feedback = feedback + f"Missing pair0-2.csv from uploaded zip archive.\n"
+
         # Question 4
-        '''
+        try:
+            f = files.read(f"{base_dir}pair1-2.csv").decode("utf-8").split('\n')[1]
+            if f == solutions[2][0]:
+                score += 20
+            else:
+                feedback = feedback + f"File pair1-2.csv is incorrect.\n"
+        except KeyError:
+            feedback = feedback + f"Missing pair1-2.csv from uploaded zip archive.\n"
+        
         # Question 5
         q5_files = ["pair2-2.csv", "pair3-2.csv", "pair4-2.csv", "pair5-2.csv", "pair6-2.csv"]
         for ind, foi in enumerate(q5_files):
             try:
-                f = files.read(f"{base_dir}{foi}").decode("utf-8")
+                f = files.read(f"{base_dir}{foi}").decode("utf-8").split('\n')[1]
 
                 if f == solutions[3][ind]:
                     score += 4
@@ -166,7 +172,6 @@ class RSALabTemplate(LabTemplate):
                     feedback = feedback + f"File {foi} is incorrect.\n"
             except KeyError:
                 feedback = feedback + f"Missing {foi} from uploaded zip archive.\n"
-        '''
 
         return Grade(score=score, feedback=feedback)
 
@@ -189,7 +194,6 @@ class RSALabTemplate(LabTemplate):
 
     def sec1(self):
         labInput = self.temp_lab_dir / "lab-input"
-        print(labInput)
         if not os.path.exists(labInput):
             os.mkdir(labInput)
 
@@ -197,10 +201,16 @@ class RSALabTemplate(LabTemplate):
         publicKey = keyPair.public_key()
         cx1Plain = generateString(25)
         cx2Plain = generateString(25)
-        print("Plain1", cx1Plain)
-        print("Plain2", cx2Plain)
         cipher = PKCS1_OAEP.new(publicKey, randfunc=random.randbytes)
         solution = ""
+
+        # Provides students with way to perform Textbook RSA encryption/decryption
+        with open(f"{labInput}/TextbookRSA.py", "w") as f:
+            with open('main.py', 'r') as g:
+                lines = g.readlines()
+                f.write('import sys\n\n')
+                for i in range(27,88):
+                    f.write(lines[i])
 
         # CX
         # part a is textbook rsa, part b is with PKCS1.5 and part C is OAEP
@@ -243,7 +253,6 @@ class RSALabTemplate(LabTemplate):
 
         
         boooool = random.random() < 0.5
-        print(boooool)
         with open(f"{labInput}/ma1", "w") as f:
             f.write(boooool and cx1Plain or generateString(25))
             f.close()
@@ -340,14 +349,11 @@ class RSALabTemplate(LabTemplate):
                     f.close()
 
                 with open(f"{cipherDir}/ciphertext {ciphername}.txt", "wb") as f:
-                    # f.write(cipher.encrypt(para.encode("utf-8"))) # this is for OAEP
-                    # this is for PKCS #1.5
-                    f.write(rsa.encrypt(para.encode("utf-8"), publicKey))
+                    f.write(TextbookRSA.encrypt(bytes(para, "utf-8"), publicKey))
                     f.close()
                 matching_pair_3 = (ciphername, plainname)
                 if i == 0:
-                    solution3 += f"Plaintext,Ciphertext\nplaintext {matching_pair_3[1]}.txt,ciphertext {matching_pair_3[0]}.txt"
-                print("Continuining with", i)
+                    solution3 += f"plaintext {matching_pair_3[1]}.txt,ciphertext {matching_pair_3[0]}.txt"
                 continue
 
             ############################ QUESTION 4 ############################
@@ -355,69 +361,61 @@ class RSALabTemplate(LabTemplate):
                 # add the padding, one 02 byte, one random byte, and then the message
                 fully = generateString(25) + \
                     str(random.randint(0, 100))
-                # randbytes does not work :(
-                # this is because it doesn't always give me a valid utf8 byte that I can use unfortunately
-                # random.randbytes(1)
-                what = random.randint(0, 255)
-                print(what)
+                
+                what = random.randint(0,15)
+                what = what << 4
                 rByte = chr(what)
-                para = (b"\x02".decode() +
-                        rByte)+fully
+                
+                para = (b"\x02".decode() +rByte)+fully
 
                 with open(f"{plainDir}/plaintext {plainname}.txt", "w") as f:
                     f.write(fully)
                     f.close()
 
                 with open(f"{cipherDir}/ciphertext {ciphername}.txt", "wb") as f:
-                    # f.write(cipher.encrypt(para.encode("utf-8"))) # this is for OAEP
-                    # this is for PKCS #1.5
-                    # f.write(rsa.encrypt(para.encode("utf-8"), publicKey))
-                    f.write(TextbookRSA.encrypt(
-                        para.encode("utf-8"), publicKey))
+                    f.write(TextbookRSA.encrypt(para.encode("utf-8"), publicKey))
                     f.close()
                 matching_pair_4 = (ciphername, plainname)
                 if i == 2:
-                    solution4 += f'Plaintext,Ciphertext\nplaintext {matching_pair_4[1]}.txt,ciphertext {matching_pair_4[0]}.txt'
+                    solution4 += f'plaintext {matching_pair_4[1]}.txt,ciphertext {matching_pair_4[0]}.txt'
                 continue
 
             ############################ QUESTION 5 ############################
             if i == 4 or i == 5 or i == 6 or i == 7 or i == 8 or i == 9 or i == 10 or i == 11 or i == 12 or i == 13:
-                # add the padding, one 02 byte, one random byte, and then the message
+                # add the padding: one 05 byte, random string , and then the message
                 fully = bytes(generateString(25) +
                               str(random.randint(0, 100)), "utf-8")
-                # randbytes does not work :(
-                # this is because it doesn't always give me a valid utf8 byte that I can use unfortunately
+                
                 what = ""
                 if i == 4 or i == 5:
                     what = chr(random.randint(0, 15))
                     # we start off with half a byte, or 4 bits.
-                    # what = chr(int(
-                    #     f"0000{random.randint(0,1)}{random.randint(0,1)}{random.randint(0,1)}{random.randint(0,1)}", 2))
-                    print("Okay matching pairs ARE: ", ciphername,
-                          plainname, b"\x05" + bytes(what, "utf-8"))
+            
                     matching_pair_5 = (ciphername, plainname)
                     if i == 4:
-                        solution5 += f'Plaintext,Ciphertext\nplaintext {matching_pair_5[1]}.txt,ciphertext {matching_pair_5[0]}.txt;'
+                        solution5 += f'plaintext {matching_pair_5[1]}.txt,ciphertext {matching_pair_5[0]}.txt;'
+
                 if i == 6 or i == 7:
 
                     what = chr(random.randint(0, 255))
                     matching_pair_6 = (ciphername, plainname)
                     if i == 6:
-                        solution5 += f'Plaintext,Ciphertext\nplaintext {matching_pair_6[1]}.txt,ciphertext {matching_pair_6[0]}.txt;'
+                        solution5 += f'plaintext {matching_pair_6[1]}.txt,ciphertext {matching_pair_6[0]}.txt;'
+
                 if i == 8 or i == 9:
 
                     what = chr(random.randint(0, 255)) + \
                         chr(random.randint(0, 15))
                     matching_pair_7 = (ciphername, plainname)
                     if i == 8:
-                        solution5 += f'Plaintext,Ciphertext\nplaintext {matching_pair_7[1]}.txt,ciphertext {matching_pair_7[0]}.txt;'
+                        solution5 += f'plaintext {matching_pair_7[1]}.txt,ciphertext {matching_pair_7[0]}.txt;'
 
                 if i == 10 or i == 11:
                     what = chr(random.randint(0, 255)) + \
                         chr(random.randint(0, 255))
                     matching_pair_8 = (ciphername, plainname)
                     if i == 10:
-                        solution5 += f'Plaintext,Ciphertext\nplaintext {matching_pair_8[1]}.txt,ciphertext {matching_pair_8[0]}.txt;'
+                        solution5 += f'plaintext {matching_pair_8[1]}.txt,ciphertext {matching_pair_8[0]}.txt;'
 
                 if i == 12 or i == 13:
                     what = chr(random.randint(0, 255)) + \
@@ -425,21 +423,17 @@ class RSALabTemplate(LabTemplate):
                         chr(random.randint(0, 15))
                     matching_pair_9 = (ciphername, plainname)
                     if i == 12:
-                        solution5 += f'Plaintext,Ciphertext\nplaintext {matching_pair_9[1]}.txt,ciphertext {matching_pair_9[0]}.txt;'
+                        solution5 += f'plaintext {matching_pair_9[1]}.txt,ciphertext {matching_pair_9[0]}.txt;'
 
                 para = (b"\x05" +
                         bytes(what, "utf-8"))+fully
-                # print(i, bytes(what, "utf-8"))
+    
                 with open(f"{plainDir}/plaintext {plainname}.txt", "wb") as f:
                     f.write(fully)
                     f.close()
 
                 with open(f"{cipherDir}/ciphertext {ciphername}.txt", "wb") as f:
-                    # f.write(cipher.encrypt(para.encode("utf-8"))) # this is for OAEP
-                    # this is for PKCS #1.5
-                    # f.write(rsa.encrypt(para.encode("utf-8"), publicKey))
-                    f.write(TextbookRSA.encrypt(
-                        para, publicKey))
+                    f.write(TextbookRSA.encrypt(para, publicKey))
                     f.close()
                 continue
             #####################################################################
@@ -450,7 +444,6 @@ class RSALabTemplate(LabTemplate):
                 f.close()
 
             with open(f"{cipherDir}/ciphertext {ciphername}.txt", "wb") as f:
-                # f.write(cipher.encrypt(para.encode("utf-8"))) # this is for OAEP
                 # this is for PKCS #1.5
                 f.write(rsa.encrypt(random2.encode("utf-8"), publicKey))
                 f.close()
@@ -459,7 +452,6 @@ class RSALabTemplate(LabTemplate):
             f.write(
                 f"Plaintext,Ciphertext\nplaintext {matching_pair_3[1]}.txt,ciphertext {matching_pair_3[0]}.txt")
             f.close()
-
         with (open(f"{labInput}/pair1-1.csv", "w")) as f:
             f.write(
                 f"Plaintext,Ciphertext\nplaintext {matching_pair_4[1]}.txt,ciphertext {matching_pair_4[0]}.txt")
