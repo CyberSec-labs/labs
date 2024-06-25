@@ -204,14 +204,6 @@ class RSALabTemplate(LabTemplate):
         cipher = PKCS1_OAEP.new(publicKey, randfunc=random.randbytes)
         solution = ""
 
-        # Provides students with way to perform Textbook RSA encryption/decryption
-        with open(f"{labInput}/TextbookRSA.py", "w") as f:
-            with open('main.py', 'r') as g:
-                lines = g.readlines()
-                f.write('import sys\n\n')
-                for i in range(27,88):
-                    f.write(lines[i])
-
         # CX
         # part a is textbook rsa, part b is with PKCS1.5 and part C is OAEP
         with open(f"{labInput}/cx1a", "wb") as f:
