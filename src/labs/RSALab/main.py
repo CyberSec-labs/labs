@@ -130,21 +130,20 @@ class RSALabTemplate(LabTemplate):
                 f = files.read(f"{base_dir}{foi}").decode("utf-8")
 
                 if f == solutions[0][ind]:
-                    score += 3
+                    score += 4
                 else:
                     feedback = feedback + f"File {foi} is incorrect.\n"
             except KeyError:
                 feedback = feedback + f"Missing {foi} from uploaded zip archive.\n"
-        score+=score//9
+        score+=score//24
 
-        # Question 2
-        feedback += f'Question 2 manually graded for 20 points.\n'
+        # Question 2 does not get graded
 
         # Question 3
         try:
             f = files.read(f"{base_dir}pair0-2.csv").decode("utf-8").split('\n')[1]
             if f == solutions[1][0]:
-                score += 20
+                score += 25
             else:
                 feedback = feedback + f"File pair0-2.csv is incorrect.\n"
         except KeyError:
@@ -154,24 +153,27 @@ class RSALabTemplate(LabTemplate):
         try:
             f = files.read(f"{base_dir}pair1-2.csv").decode("utf-8").split('\n')[1]
             if f == solutions[2][0]:
-                score += 20
+                score += 25
             else:
                 feedback = feedback + f"File pair1-2.csv is incorrect.\n"
         except KeyError:
             feedback = feedback + f"Missing pair1-2.csv from uploaded zip archive.\n"
         
         # Question 5
-        q5_files = ["pair2-2.csv", "pair3-2.csv", "pair4-2.csv", "pair5-2.csv", "pair6-2.csv"]
+        q5_files = ["pair2-2.csv", "pair3-2.csv", "pair4-2.csv", "pair5-2.csv"]
+        q5_score = 0
         for ind, foi in enumerate(q5_files):
             try:
                 f = files.read(f"{base_dir}{foi}").decode("utf-8").split('\n')[1]
 
                 if f == solutions[3][ind]:
-                    score += 4
+                    q5_score += 6
                 else:
                     feedback = feedback + f"File {foi} is incorrect.\n"
             except KeyError:
                 feedback = feedback + f"Missing {foi} from uploaded zip archive.\n"
+        q5_score += q5_score//24
+        score+=q5_score
 
         return Grade(score=score, feedback=feedback)
 
@@ -203,6 +205,13 @@ class RSALabTemplate(LabTemplate):
         cx2Plain = generateString(25)
         cipher = PKCS1_OAEP.new(publicKey, randfunc=random.randbytes)
         solution = ""
+
+        with open(f"{labInput}/TextbookRSA.py", "w") as f:
+            with open('main.py', 'r') as g:
+                lines = g.readlines()
+                f.write('import sys\n\n')
+                for i in range(27, 88):
+                    f.write(lines[i])
 
         # CX
         # part a is textbook rsa, part b is with PKCS1.5 and part C is OAEP
@@ -319,11 +328,11 @@ class RSALabTemplate(LabTemplate):
         # this is for question 4
         matching_pair_4 = (-1, -1)
         # the following are for question 5
-        matching_pair_5 = (-1, -1)
-        matching_pair_6 = (-1, -1)
-        matching_pair_7 = (-1, -1)
-        matching_pair_8 = (-1, -1)
-        matching_pair_9 = (-1, -1)
+        matching_pair_5 = (-1, -1) #  8 random bits
+        matching_pair_6 = (-1, -1) # 12 random bits
+        matching_pair_7 = (-1, -1) # 16 random bits
+        matching_pair_8 = (-1, -1) # 20 random bits
+        
 
         for i in range(100):
 
@@ -351,8 +360,7 @@ class RSALabTemplate(LabTemplate):
             ############################ QUESTION 4 ############################
             if i == 2 or i == 3:
                 # add the padding, one 02 byte, one random byte, and then the message
-                fully = generateString(25) + \
-                    str(random.randint(0, 100))
+                fully = generateString(25) + str(random.randint(0, 100))
                 
                 what = random.randint(0,15)
                 what = what << 4
@@ -373,52 +381,45 @@ class RSALabTemplate(LabTemplate):
                 continue
 
             ############################ QUESTION 5 ############################
-            if i == 4 or i == 5 or i == 6 or i == 7 or i == 8 or i == 9 or i == 10 or i == 11 or i == 12 or i == 13:
-                # add the padding: one 05 byte, random string , and then the message
-                fully = bytes(generateString(25) +
-                              str(random.randint(0, 100)), "utf-8")
+            if i == 4 or i == 5 or i == 6 or i == 7 or i == 8 or i == 9 or i == 10 or i == 11:
+                # add the padding: one 02 byte, random string , and then the message
+                fully = bytes(generateString(25) + str(random.randint(0, 100)), "utf-8")
                 
                 what = ""
                 if i == 4 or i == 5:
-                    what = chr(random.randint(0, 15))
-                    # we start off with half a byte, or 4 bits.
+                    # 8 random bits for padding
+                    what = chr(random.randint(0, 255))
             
                     matching_pair_5 = (ciphername, plainname)
                     if i == 4:
                         solution5 += f'plaintext {matching_pair_5[1]}.txt,ciphertext {matching_pair_5[0]}.txt;'
 
                 if i == 6 or i == 7:
-
-                    what = chr(random.randint(0, 255))
+                    # 12 random bits followed by four zero bits for padding
+                    what = chr(random.randint(0, 255)) + chr(random.randint(0,15) << 4)
+                                    # 8 bits                 # 4 bits             # 4 zero bits
                     matching_pair_6 = (ciphername, plainname)
                     if i == 6:
                         solution5 += f'plaintext {matching_pair_6[1]}.txt,ciphertext {matching_pair_6[0]}.txt;'
 
                 if i == 8 or i == 9:
+                    # 16 random bits for padding
+                    what = chr(random.randint(0, 255)) + chr(random.randint(0, 255))
 
-                    what = chr(random.randint(0, 255)) + \
-                        chr(random.randint(0, 15))
                     matching_pair_7 = (ciphername, plainname)
                     if i == 8:
                         solution5 += f'plaintext {matching_pair_7[1]}.txt,ciphertext {matching_pair_7[0]}.txt;'
 
                 if i == 10 or i == 11:
-                    what = chr(random.randint(0, 255)) + \
-                        chr(random.randint(0, 255))
+                    # 20 random bits followed by four zero bits for padding
+                    what = chr(random.randint(0, 255)) + chr(random.randint(0, 255)) + chr(random.randint(0,15) << 4)
+            
                     matching_pair_8 = (ciphername, plainname)
                     if i == 10:
                         solution5 += f'plaintext {matching_pair_8[1]}.txt,ciphertext {matching_pair_8[0]}.txt;'
 
-                if i == 12 or i == 13:
-                    what = chr(random.randint(0, 255)) + \
-                        chr(random.randint(0, 255)) + \
-                        chr(random.randint(0, 15))
-                    matching_pair_9 = (ciphername, plainname)
-                    if i == 12:
-                        solution5 += f'plaintext {matching_pair_9[1]}.txt,ciphertext {matching_pair_9[0]}.txt;'
-
-                para = (b"\x05" +
-                        bytes(what, "utf-8"))+fully
+                # same starting byte as question 4
+                para = (b"\x02" + bytes(what, "utf-8"))+fully
     
                 with open(f"{plainDir}/plaintext {plainname}.txt", "wb") as f:
                     f.write(fully)
@@ -464,10 +465,7 @@ class RSALabTemplate(LabTemplate):
             f.write(
                 f"Plaintext,Ciphertext\nplaintext {matching_pair_8[1]}.txt,ciphertext {matching_pair_8[0]}.txt")
             f.close()
-        with (open(f"{labInput}/pair6-1.csv", "w")) as f:
-            f.write(
-                f"Plaintext,Ciphertext\nplaintext {matching_pair_9[1]}.txt,ciphertext {matching_pair_9[0]}.txt")
-            f.close()
+
         with (open(f"{labInput}/ciphertexts.csv", "w")) as f:
             f.write(ciphetextcsvFile)
             f.close()

@@ -5,6 +5,7 @@ This lab has 5 parts.
 ## Question 1
 For question 1, locate the following files in the `lab-input` subdirectory:
 
+ - TextbookRSA.py
  - e1
  - d1
  - n1
@@ -50,8 +51,8 @@ For this question, we aim to break textbook RSA encryption.
 
 In your `lab-input` folder, you will find the following:
 
- - ciphertexts.csv
-	 - contains 'eavesdropped ciphertexts' (with corresponding identifiers)
+- ciphertexts.csv
+	- contains 'eavesdropped ciphertexts' (with corresponding identifiers)
 - plaintexts.csv
 	- contains 'suspected plaintexts' (and corresponding identifiers)
 - pair0-1
@@ -87,28 +88,28 @@ You should also keep note of the runtime for this operation.
 
 ## Question 5
 
-For this question we want to brute force the padding, instead of using a known pad. 
+For this question we want to brute force the padding, instead of using a known pad.
 
-Try finding a random string with 4 bits of padding, 8 bits of padding, 12 bits of padding, 16 bits of padding, and then 20 bits of padding. 
+Try finding a random string, r, with 8 random bits of padding, 12 random bits followed by four zero bits of padding, 16 random bits of padding, and then 20 random bits followed by four zero bits of padding. Use this r in the NP1(m) function defined in question 4.
 
 You should find two matches for each padding length. You can double check your results with the following files:
 
- - Pair2-1
-	 - one of the two matches for 4 bits of padding
+- Pair2-1
+	- one of the two matches for 8 random bits of padding
 - Pair 3-1
-	- one of two matches for 8 bits of padding
+	- one of two matches for 12 random bits followed by four zero bits of padding 
 - Pair 4-1
-	- one of two matches for 12 bits of padding
+	- one of two matches for 16 random bits of padding
 - Pair 5-1
-	- one of two matches for 16 bits of padding
-- Pair 6-1
-	- one of two matches for 20 bits of padding
+	- one of two matches for 20 random bits followed by four zero bits of padding
+
+*** Duplicate solutions may be found, but each pair is used only once as a solution. For example, if a file pair is identified by both the 12 and 16 random bit pads, it will only be the solution for padding with 12 random bits. *** 
 
 If one of the pairs for each padding matches the given pairs, your other pair should be correct.
 
-For each padding, submit your other pair in the same csv format as each question, that being pair2-2, pair3-2, pair4-2, pair5-2, and pair6-2.
+For each padding, submit your other pair in the same csv format as each question, that being pair2-2, pair3-2, pair4-2, and pair5-2.
 
-Submit pair2-2, pair3-2, pair4-2, pair5-2, and pair6-2 in your lab-solutions folder. 
+Submit pair2-2, pair3-2, pair4-2, and pair5-2 in your lab-solutions folder. 
 
 You should also test the runtime to find each set of pairs. Test and keep note of each.
 
