@@ -8,7 +8,7 @@ For question 1, locate the following files in the `Q1files` subdirectory:
  - 10 text files starting from 0, to 9
  - Q1.hash
 
-Q1.hash is the sha256 hash for one of the files. Your task is to figure out which file it is and submit the file in your submission folder.
+Q1.hash is the sha256 hash for one of the files. Your task is to figure out which file it is and submit the file in your submission folder. 
 
 ## Question 2
 For question 2, locate the following files in your `Q2files` subdirectory:
