@@ -103,13 +103,13 @@ class PasswordLabLabTemplate(LabTemplate):
 
         random.shuffle(gang)
 
-        if 'Adam' in gang:
-            gang.remove("Adam")
+        if 'Benedict' in gang:
+            gang.remove("Benedict")
 
-        gang.append("Adam")
+        gang.append("Benedict")
         gang.reverse()
 
-        # Q1: A most common password for Adam
+        # Q1: A most common password for Benedict
         pwd.append(random.choice(mcp).strip())
         # Q2: A most common password for 1 random gang member
         pwd.append(random.choice(mcp).strip())
