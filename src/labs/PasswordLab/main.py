@@ -11,6 +11,9 @@ import sys
 import binascii
 import os
 
+from fastapi import UploadFile
+import zipfile
+
 from src.utils import Grade, LabTemplate, Lab, CLIHandler
 
 # files needed: 
@@ -50,13 +53,30 @@ class PasswordLabLabTemplate(LabTemplate):
     static_dir: Path = Path(__file__).parent
 
     @staticmethod
-    def _grade(submitted_solution: str, solution: str) -> Grade:
+    def _grade(submitted_solution: str, solution: str, file: UploadFile) -> Grade:
         """Grades a submissions
         """
 
+        solutions = solution.split('_')
+        files = zipfile.ZipFile(file.file)
+        base_dir = files.filelist[0].filename
 
-        score = 0
-        feedback = "example"
+        score = 0.0
+        feedback = ""
+
+        total_logins = len(solutions) # = number of questions + 1
+
+        for i in range(1,total_logins):
+            try:
+                with open(f'{base_dir}Login_{i}.csv', 'r') as f:
+                    answer = f.read()
+                if answer == solutions[i]:
+                    score += 100/(total_logins-1)
+                else:
+                    feedback+= f'Login_{i} credentials are incorrect.\n' 
+            except:
+                feedback+= f'Missing Login_{i} from submission folder.\n'
+        score = round(score)
 
         return Grade(score=score, feedback=feedback)
 
@@ -103,13 +123,13 @@ class PasswordLabLabTemplate(LabTemplate):
 
         random.shuffle(gang)
 
-        if 'Adam' in gang:
-            gang.remove("Adam")
+        if 'Benedict' in gang:
+            gang.remove("Benedict")
 
-        gang.append("Adam")
+        gang.append("Benedict")
         gang.reverse()
 
-        # Q1: A most common password for Adam
+        # Q1: A most common password for Benedict
         pwd.append(random.choice(mcp).strip())
         # Q2: A most common password for 1 random gang member
         pwd.append(random.choice(mcp).strip())
@@ -130,7 +150,7 @@ class PasswordLabLabTemplate(LabTemplate):
         shutil.copy(f"{self.static_dir}/PwnedPWs100k", f"{self.temp_lab_dir}/Q6/PwnedPWs100k")
 
         for i in range(0, 6):
-            solution = solution + f"_{gang[i]}\0\1{pwd[i]}"
+            solution = solution + f"_{gang[i]},{pwd[i]}"
 
         for i in range(6, len(gang)):
             pwd.append(''.join(random.choices(string.ascii_uppercase +
@@ -197,7 +217,7 @@ class PasswordLabLabTemplate(LabTemplate):
             SaltedPWs.writelines(q6)
         SaltedPWs.close()
 
-        py_compile.compile("utils/Login.py", "utils/Login.pyc")
+        py_compile.compile("Login.py", "Login.pyc")
         
         return Lab(
             lab_template_id=self.lab_template_id,
@@ -244,7 +264,8 @@ def main(args: list[str]):
             verbose=True             # Print status messages to stdout (optional)
         )
         with open(a, "rb") as f:
-            print(PasswordLabLabTemplate().grade("", template, spoof(f)))
+            result = PasswordLabLabTemplate().grade("", template, spoof(f))
+            print(f'Score:\n{result.score}\nFeedback:\n{result.feedback}')
         os.remove(toDelete)
 
 if __name__ == "__main__":
