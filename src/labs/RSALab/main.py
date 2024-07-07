@@ -350,7 +350,9 @@ class RSALabTemplate(LabTemplate):
                     f.close()
 
                 with open(f"{cipherDir}/ciphertext {ciphername}.txt", "wb") as f:
-                    f.write(TextbookRSA.encrypt(bytes(para, "utf-8"), publicKey))
+                    # f.write(cipher.encrypt(para.encode("utf-8"))) # this is for OAEP
+                    # this is for Textbook
+                    f.write(TextbookRSA.encrypt(para.encode("utf-8"), publicKey))
                     f.close()
                 matching_pair_3 = (ciphername, plainname)
                 if i == 0:

@@ -1,3 +1,3 @@
-from .main import ExampleLabLabTemplate
+from .main import PasswordLabLabTemplate
 
-__all__ = ["ExampleLabLabTemplate"]
+__all__ = ["PasswordLabLabTemplate"]
