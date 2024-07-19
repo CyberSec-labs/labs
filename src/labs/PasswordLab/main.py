@@ -64,18 +64,19 @@ class PasswordLabLabTemplate(LabTemplate):
         score = 0.0
         feedback = ""
 
-        total_logins = len(solutions) # = number of questions + 1
+        # number of questions + 1 due to solutions[0] = ''
+        logins = len(solutions)
 
-        for i in range(1,total_logins):
+        for i in range(1, logins):
             try:
                 with open(f'{base_dir}Login_{i}.csv', 'r') as f:
                     answer = f.read()
                 if answer == solutions[i]:
-                    score += 100/(total_logins-1)
+                    score += 100/(logins-1)
                 else:
-                    feedback+= f'Login_{i} credentials are incorrect.\n' 
+                    feedback+= f'Login_{i}.csv credentials are incorrect.\n' 
             except:
-                feedback+= f'Missing Login_{i} from submission folder.\n'
+                feedback+= f'Missing Login_{i}.csv from submission folder.\n'
         score = round(score)
 
         return Grade(score=score, feedback=feedback)
@@ -85,9 +86,8 @@ class PasswordLabLabTemplate(LabTemplate):
         random.seed(seed)
         solution = ""
         for i in range(6):
-            if os.path.exists(f"{self.temp_lab_dir}/Q{i + 1}"):
-                shutil.rmtree(f"{self.temp_lab_dir}/Q{i + 1}")
-            os.mkdir(f"{self.temp_lab_dir}/Q{i + 1}")
+            if not os.path.exists(f"{self.temp_lab_dir}/Q{i + 1}"):
+                os.mkdir(f"{self.temp_lab_dir}/Q{i + 1}")
             if i ==0:
                 py_compile.compile(f"{self.static_dir}/Login.py", f"{self.temp_lab_dir}/Q{i+1}/Login.pyc")
             else:
@@ -149,7 +149,8 @@ class PasswordLabLabTemplate(LabTemplate):
         shutil.copy(f"{self.static_dir}/PwnedPWs100k", f"{self.temp_lab_dir}/Q5/PwnedPWs100k")
         shutil.copy(f"{self.static_dir}/PwnedPWs100k", f"{self.temp_lab_dir}/Q6/PwnedPWs100k")
 
-        for i in range(0, 6):
+        solution += f'_{pwd[0]}'
+        for i in range(1, 6):
             solution = solution + f"_{gang[i]},{pwd[i]}"
 
         for i in range(6, len(gang)):

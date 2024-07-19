@@ -27,7 +27,7 @@ f2a has some randomly generated string, while h2 and f2b are both blank.
 
 Your goal is to find some string that is different from f2a, but produces the same internet checksum hash. This is a hash collision.
 
-Submit both the matching hash h2b.txt, and f2b.txt in your submissions folder.
+Submit both the matching hash h2.txt, and f2b.txt in your submissions folder.
 
 ## Question 3
 For question 3, locate the following files in your `q3` subdirectory:

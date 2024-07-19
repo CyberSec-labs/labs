@@ -49,7 +49,7 @@ class TLSLabTemplate(LabTemplate):
         if set(submitted_solution_nums) != set([str(x) for x in range(0, total_certs)]):
             return Grade(
                 score=0,
-                feedback=f"Solution must be in form of 0_1_2_3 and each directory 0-8 must be used once: {submitted_solution}"
+                feedback=f"Solution must be in form of 0_1_2_3 and each directory 0-8 must be used once."
             )
         else:
             score: float = 0
@@ -88,9 +88,10 @@ class TLSLabTemplate(LabTemplate):
             
             # Rename the cert paths to match the solution
             for i, cert_dir_path in enumerate(shuffled_client_cert_dirs):
-                if os.path.exists(cert_dir_path):
-                    continue
-                shutil.move(str(cert_dir_path), str(
+                if os.path.exists(str(cert_dir_path.parent / str(i))):
+                    shutil.rmtree(str(cert_dir_path))
+                else:
+                    shutil.move(str(cert_dir_path), str(
                     cert_dir_path.parent / str(i)))
 
         # Copy the question folder into the directory that will be given to users

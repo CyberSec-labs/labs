@@ -15,7 +15,7 @@ from Crypto.Cipher import AES, PKCS1_OAEP
 from fastapi import UploadFile
 # from utils import Grade, LabTemplate, Lab
 from src.utils import Grade, LabTemplate, Lab, CLIHandler
-
+import io
 
 
 
@@ -82,7 +82,7 @@ class Lab3LabTemplate(LabTemplate):
 
         # for question 1
         try:
-            f = files.read(f"{base_dir}/h1b.txt")
+            f = files.read(f"{base_dir}h1b.txt").decode('utf-8')
 
             if f == solutions[0]:
                 score = 25
@@ -93,8 +93,8 @@ class Lab3LabTemplate(LabTemplate):
 
         # for question 2
         try:
-            f2b = files.read(f"{base_dir}/f2b.txt")
-            submittedHash = files.read(f"{base_dir}/h2b.txt")
+            f2b = files.read(f"{base_dir}f2b.txt").decode('utf-8')
+            submittedHash = files.read(f"{base_dir}h2.txt").decode('utf-8')
             sol2 = solutions[1]
 
             temp = sol2.split("|\0\1|")
@@ -114,14 +114,14 @@ class Lab3LabTemplate(LabTemplate):
 
         except KeyError:
             feedback = (
-                feedback + "Missing f2b.txt or h2b.txt from uploaded zip archive.\n"
+                feedback + "Missing f2b.txt or h2.txt from uploaded zip archive.\n"
             )
 
         # for question 3
 
         try:
-            f = files.read(f"{base_dir}/f3a.txt")
-
+            with io.TextIOWrapper(files.open(f"{base_dir}f3a.txt"), encoding="utf-8") as f:
+                f = f.read()
             if toInternetChecksum(f) == solutions[2]:
                 if f.find("replace this with your matching string") == -1:
                     score = score + 25
@@ -136,7 +136,8 @@ class Lab3LabTemplate(LabTemplate):
 
         # question 4
         try:
-            f = files.read(f"{base_dir}/f4b.html")
+            with io.TextIOWrapper(files.open(f"{base_dir}f4b.html"), encoding="utf-8") as f:
+                f = f.read()
             sol4 = solutions[3]
             split = sol4.split("|\0\1|")
             checkIfExists = split[0]
@@ -159,9 +160,8 @@ class Lab3LabTemplate(LabTemplate):
         random.seed(seed)
 
         for i in range(4):
-            if os.path.exists(f"{self.temp_lab_dir}/q{i + 1}"):
-                shutil.rmtree(f"{self.temp_lab_dir}/q{i + 1}")
-            os.mkdir(f"{self.temp_lab_dir}/q{i + 1}")
+            if not os.path.exists(f"{self.temp_lab_dir}/q{i + 1}"):
+                os.mkdir(f"{self.temp_lab_dir}/q{i + 1}")
 
         solution = self.sec1()
         solution = solution + "_" + self.sec2()
@@ -293,7 +293,8 @@ def main(args: list[str]):
             verbose=True             # Print status messages to stdout (optional)
         )
         with open(a, "rb") as f:
-            print(Lab3LabTemplate().grade("", template, spoof(f)))
+            results = Lab3LabTemplate().grade("", template, spoof(f))
+            print(f'Score:\n{results.score}\nFeedback:\n{results.feedback}')
         os.remove(toDelete)
 
 if __name__ == "__main__":
