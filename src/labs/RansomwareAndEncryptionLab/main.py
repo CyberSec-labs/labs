@@ -112,14 +112,14 @@ class Lab2LabTemplate(LabTemplate):
         encrypted_seed = seed_cipher.encrypt(pad(seed, AES.block_size))
         cipher = AES.new(random.randbytes(32), AES.MODE_CBC)
 
-        with open(f"{self.temp_lab_dir}/Q1/Solution_1.txt", "wb") as f:
+        with open(f"{self.temp_lab_dir}/Q1/Solution_1.txt.encrypted", "wb") as f:
             contents = generateString(25).encode('utf-8')
             encrypted = cipher.encrypt(pad(contents, AES.block_size))
             f.write(cipher.iv)
             f.write(encrypted)
             f.close()
 
-        with open(f"{self.temp_lab_dir}/Q1/Solution_1.txt.TOKEN", "wb") as f:
+        with open(f"{self.temp_lab_dir}/Q1/Solution_1.txt.Token", "wb") as f:
             f.write(seed_cipher.iv)
             f.write(encrypted_seed)
             f.close()
@@ -144,14 +144,14 @@ class Lab2LabTemplate(LabTemplate):
         encrypted_seed = seed_cipher.encrypt(pad(seed, AES.block_size))
         cipher = AES.new(random.randbytes(32), AES.MODE_CBC)
 
-        with open(f"{self.temp_lab_dir}/Q2/Solution_2.txt", "wb") as f:
+        with open(f"{self.temp_lab_dir}/Q2/Solution_2.txt.encrypted", "wb") as f:
             contents = generateString(25).encode('utf-8')
             encrypted = cipher.encrypt(pad(contents, AES.block_size))
             f.write(cipher.iv)
             f.write(encrypted)
             f.close()
 
-        with open(f"{self.temp_lab_dir}/Q2/Solution_2.txt.TOKEN", "wb") as f:
+        with open(f"{self.temp_lab_dir}/Q2/Solution_2.txt.Token", "wb") as f:
             f.write(seed_cipher.iv)
             f.write(encrypted_seed)
             f.close()
@@ -161,15 +161,14 @@ class Lab2LabTemplate(LabTemplate):
     def sec3(self):
         # r3.py uses a public/private key encryption scheme. it is much more secure.
         # r3 is not obfuscated as that would pose too much of a challenge for students
-        rsa_seed = random.getrandbits(16)
-        aes_seed = random.randbytes(32)
-        
-        random.seed(rsa_seed)
+        random.seed(random.getrandbits(16))
 
         keyprivate = RSA.generate(2048, randfunc = random.randbytes)
         keypublic = keyprivate.public_key()
 
-        cipher_rsa = PKCS1_OAEP.new(keypublic)
+        random.seed(random.getrandbits(16))
+
+        cipher_rsa = PKCS1_OAEP.new(keypublic, randfunc=random.randbytes)
 
         with open(f"{self.static_dir}/Malware Files//R3.py", "r") as template:
             patched = template.read()
@@ -180,17 +179,18 @@ class Lab2LabTemplate(LabTemplate):
                 f.write(patched)
                 f.close()
 
+        aes_seed = random.randbytes(32)
         random.seed(aes_seed)
         encrypted_seed = cipher_rsa.encrypt(aes_seed)
         cipher = AES.new(random.randbytes(32), AES.MODE_CBC)
 
-        with open(f'{self.temp_lab_dir}/Q3/Solution_3.txt', 'wb') as f:
+        with open(f'{self.temp_lab_dir}/Q3/Solution_3.txt.encrypted', 'wb') as f:
             contents = generateString(25).encode('utf-8')
             encrypted = cipher.encrypt(pad(contents, AES.block_size))
             f.write(cipher.iv)
             f.write(encrypted)
 
-        with open(f'{self.temp_lab_dir}/Q3/Solution_3.txt.TOKEN', 'wb') as f:
+        with open(f'{self.temp_lab_dir}/Q3/Solution_3.txt.Token', 'wb') as f:
             f.write(encrypted_seed)
 
         # our decryption template is the same across all malware files, so only write this once.
