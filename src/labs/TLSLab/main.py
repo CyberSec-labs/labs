@@ -6,6 +6,9 @@ import shutil
 import subprocess
 import sys
 
+from fastapi import UploadFile
+import zipfile
+
 from src.utils import Grade, LabTemplate, Lab, CLIHandler
 
 
@@ -24,7 +27,7 @@ class TLSLabTemplate(LabTemplate):
     static_dir: Path = Path(__file__).parent
 
     @staticmethod
-    def _grade(submitted_solution: str, solution: str) -> Grade:
+    def _grade(submitted_solution: str, solution: str, file: UploadFile) -> Grade:
         """Grades a submissions
 
         Give 25% for each correct cert
@@ -34,14 +37,19 @@ class TLSLabTemplate(LabTemplate):
 
         # NOTE: this should be dynamic, but is currently staticmethod
         # should point to len(self.client_dirs) in the future
+        files = zipfile.ZipFile(file.file)
+        base_dir = files.filelist[0].filename
+        try:
+            submitted_solution = files.read(f"{base_dir}solutions.txt").decode("utf-8")
+        except KeyError:
+            return Grade(score=0, feedback= "solutions.txt missing from submitted directory")
         total_certs = 9
         submitted_solution_nums = submitted_solution.split("_")
         solution_nums = solution.split("_")
-        if set(submitted_solution_nums) != set([str(x) for x in range(0, total_certs)]):
+        if set(submitted_solution_nums) != {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'}:
             return Grade(
                 score=0,
-                feedback=f"Solution must be in form of 0_1_2_3: {
-                    submitted_solution}",
+                feedback=f"Solution must be in form of A_B_C_D and each directory A-I must be used once."
             )
         else:
             score: float = 0
@@ -64,9 +72,10 @@ class TLSLabTemplate(LabTemplate):
         shuffled_client_cert_dirs = list(self.client_cert_dirs)
         random.shuffle(shuffled_client_cert_dirs)
         # Solution is valid, expired, invalid_ca, invalid_cn
+        letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
         solution = "_".join(
-            str(shuffled_client_cert_dirs.index(x)) for x in self.client_cert_dirs
-        )
+            str(letters[shuffled_client_cert_dirs.index(x)]) for x in self.client_cert_dirs
+            )
         # Don't cover this since this is never called unless a developer manually sets it
         if debug:  # pragma: no cover
             # For debugging - don't rename dirs
@@ -77,13 +86,18 @@ class TLSLabTemplate(LabTemplate):
                 )
 
         else:
+            
             # Rename the cert paths to match the solution
             for i, cert_dir_path in enumerate(shuffled_client_cert_dirs):
-                shutil.move(str(cert_dir_path), str(
-                    cert_dir_path.parent / str(i)))
+                if os.path.exists(str(cert_dir_path.parent / letters[i])):
+                    shutil.rmtree(str(cert_dir_path))
+                else:
+                    shutil.move(str(cert_dir_path), str(
+                    cert_dir_path.parent / letters[i]))
 
         # Copy the question folder into the directory that will be given to users
-        self._copy_q_dir_into_lab_generated_dir()
+        if not os.path.exists(self.generated_dir / "lab" / "question"): 
+            self._copy_q_dir_into_lab_generated_dir()
 
         return Lab(
             lab_template_id=self.lab_template_id,
@@ -99,7 +113,6 @@ class TLSLabTemplate(LabTemplate):
 
     def gen_all_certs(self) -> None:
         """Generates server, valid, invalid_by_ca, invalid_by_cn, and expired certs"""
-
         # Generate CA certificate and key
         self.gen_ca_cert()
 
@@ -223,8 +236,7 @@ class TLSLabTemplate(LabTemplate):
         self.run_openssl_command(
             f"openssl x509 -req -in {cert_path}.csr -CA {self.ca_cert_path} "
             f"-CAkey {self.ca_key_path} -CAcreateserial -out {cert_path} "
-            f"-days 500 -sha256 -extfile {
-                openssl_conf_path} -extensions v3_req"
+            f"-days 500 -sha256 -extfile {openssl_conf_path} -extensions v3_req"
         )
         self.run_openssl_command(f"rm {cert_path}.csr")
 
@@ -242,8 +254,7 @@ class TLSLabTemplate(LabTemplate):
         self.run_openssl_command(f"openssl genrsa -out {key_path} 2048")
         # Generate CSR (Certificate Signing Request)
         self.run_openssl_command(
-            f"openssl req -new -key {key_path} -out {
-                cert_path}.csr -subj '{subject}'"
+            f"openssl req -new -key {key_path} -out {cert_path}.csr -subj '{subject}'"
         )
         # Sign the certificate with the CA with a past date for expiration
         self.run_openssl_command(
@@ -257,8 +268,7 @@ class TLSLabTemplate(LabTemplate):
     def gen_cert_with_md5(self, cert_path: Path, key_path: Path, subject: str) -> None:
         self.run_openssl_command(f"openssl genrsa -out {key_path} 2048")
         self.run_openssl_command(
-            f"openssl req -new -key {key_path} -out {
-                cert_path}.csr -subj '{subject}'"
+            f"openssl req -new -key {key_path} -out {cert_path}.csr -subj '{subject}'"
         )
         self.run_openssl_command(
             f"openssl x509 -req -in {cert_path}.csr -CA {self.ca_cert_path} "
@@ -273,14 +283,12 @@ class TLSLabTemplate(LabTemplate):
         openssl_conf_path = self.create_openssl_conf(unknown_ext=True)
         self.run_openssl_command(f"openssl genrsa -out {key_path} 2048")
         self.run_openssl_command(
-            f"openssl req -new -key {key_path} -out {
-                cert_path}.csr -subj '{subject}'"
+            f"openssl req -new -key {key_path} -out {cert_path}.csr -subj '{subject}'"
         )
         self.run_openssl_command(
             f"openssl x509 -req -in {cert_path}.csr -CA {self.ca_cert_path} "
             f"-CAkey {self.ca_key_path} -CAcreateserial -out {cert_path} "
-            f"-days 500 -sha256 -extfile {
-                openssl_conf_path} -extensions unknown_ext"
+            f"-days 500 -sha256 -extfile {openssl_conf_path} -extensions unknown_ext"
         )
         self.run_openssl_command(f"rm {cert_path}.csr")
 
@@ -290,8 +298,7 @@ class TLSLabTemplate(LabTemplate):
         openssl_conf_path = self.create_openssl_conf(incorrect_usage=True)
         self.run_openssl_command(f"openssl genrsa -out {key_path} 2048")
         self.run_openssl_command(
-            f"openssl req -new -key {key_path} -out {
-                cert_path}.csr -subj '{subject}'"
+            f"openssl req -new -key {key_path} -out {cert_path}.csr -subj '{subject}'"
         )
         self.run_openssl_command(
             f"openssl x509 -req -in {cert_path}.csr -CA {self.ca_cert_path} "
@@ -326,8 +333,7 @@ class TLSLabTemplate(LabTemplate):
 
         # Generate CSR (Certificate Signing Request)
         self.run_openssl_command(
-            f"openssl req -new -key {key_path} -out {
-                cert_path}.csr -subj '{subject}'"
+            f"openssl req -new -key {key_path} -out {cert_path}.csr -subj '{subject}'"
         )
 
         # Sign the certificate with the untrusted CA
@@ -568,7 +574,8 @@ def main(args: list[str]):
             verbose=True             # Print status messages to stdout (optional)
         )
         with open(a, "rb") as f:
-            print(TLSLabTemplate().grade("", template, spoof(f)))
+            results = TLSLabTemplate().grade("", template, spoof(f))
+            print(f'Grade:\n{results.score}\nFeedback:\n{results.feedback}')
         os.remove(toDelete)
 
 if __name__ == "__main__":
