@@ -16,6 +16,7 @@ from Crypto.Cipher import PKCS1_OAEP
 
 from src.utils import Grade, LabTemplate, Lab, CLIHandler
 
+import py_compile
 # make sure you add pycryptodome!
 
 
@@ -89,6 +90,7 @@ class TextbookRSA:
 
 
 keyPair = RSA.generate(2048)
+keyPair2 = RSA.generate(2048)
 
 
 class RSALabTemplate(LabTemplate):
@@ -115,13 +117,14 @@ class RSALabTemplate(LabTemplate):
         """
 
         solutions = solution.split('_')
-        for i in range(len(solutions)):
+        for i in range(len(solutions)-1):
             solutions[i] = solutions[i].split(";")
+        solutions[len(solutions)-1] = solutions[-1].split('|\0\1|')
         files = zipfile.ZipFile(file.file)
         base_dir = files.filelist[0].filename
         feedback = ""
 
-        score = 0
+        score = 0.0
 
         # Question 1 
         q1_files = ["mx1a", "mx1b", "mx1c", "my1a", "my1b", "my1c"]
@@ -130,12 +133,11 @@ class RSALabTemplate(LabTemplate):
                 f = files.read(f"{base_dir}{foi}").decode("utf-8")
 
                 if f == solutions[0][ind]:
-                    score += 4
+                    score += 20/len(q1_files)
                 else:
                     feedback = feedback + f"File {foi} is incorrect.\n"
             except KeyError:
                 feedback = feedback + f"Missing {foi} from uploaded zip archive.\n"
-        score+=score//24
 
         # Question 2 does not get graded
 
@@ -143,7 +145,7 @@ class RSALabTemplate(LabTemplate):
         try:
             f = files.read(f"{base_dir}pair0-2.csv").decode("utf-8").split('\n')[1]
             if f == solutions[1][0]:
-                score += 25
+                score += 20
             else:
                 feedback = feedback + f"File pair0-2.csv is incorrect.\n"
         except KeyError:
@@ -151,31 +153,40 @@ class RSALabTemplate(LabTemplate):
 
         # Question 4
         try:
-            f = files.read(f"{base_dir}pair1-2.csv").decode("utf-8").split('\n')[1]
+            f = files.read(f"{base_dir}pair4-2.csv").decode("utf-8").split('\n')[1]
             if f == solutions[2][0]:
-                score += 25
+                score += 20
             else:
-                feedback = feedback + f"File pair1-2.csv is incorrect.\n"
+                feedback = feedback + f"File pair4-2.csv is incorrect.\n"
         except KeyError:
-            feedback = feedback + f"Missing pair1-2.csv from uploaded zip archive.\n"
+            feedback = feedback + f"Missing pair4-2.csv from uploaded zip archive.\n"
         
         # Question 5
-        q5_files = ["pair2-2.csv", "pair3-2.csv", "pair4-2.csv", "pair5-2.csv"]
-        q5_score = 0
+        q5_files = ["pair8-2.csv", "pair12-2.csv", "pair16-2.csv", "pair20-2.csv"]
         for ind, foi in enumerate(q5_files):
             try:
                 f = files.read(f"{base_dir}{foi}").decode("utf-8").split('\n')[1]
 
                 if f == solutions[3][ind]:
-                    q5_score += 6
+                    score += 20/len(q5_files)
                 else:
                     feedback = feedback + f"File {foi} is incorrect.\n"
             except KeyError:
                 feedback = feedback + f"Missing {foi} from uploaded zip archive.\n"
-        q5_score += q5_score//24
-        score+=q5_score
 
-        return Grade(score=score, feedback=feedback)
+        # Question 6
+        for ind, b in enumerate([64, 96]):
+            try:
+                f = files.read(f'{base_dir}p{b}-2').decode('utf-8')
+
+                if f == solutions[4][ind]:
+                    score += 10
+                else:
+                    feedback+= f'p{b}-2 is incorrect.\n'
+            except KeyError:
+                feedback+= f'Missing p{b}-2 from uploaded zip archive.\n'
+
+        return Grade(score=int(score), feedback=feedback)
 
     def generate_lab(self, *, user_id: int = 0, seed: str = "abcd", debug: bool = False) -> Lab:  # type: ignore
 
@@ -183,8 +194,16 @@ class RSALabTemplate(LabTemplate):
         solution1 = self.sec1()
         self.sec2()
         solution3, solution4, solution5 = self.sec3()
+        solution6 = self.sec6()
 
-        solution = f'{solution1}_{solution3}_{solution4}_{solution5}'
+        solution = f'{solution1}_{solution3}_{solution4}_{solution5}_{solution6}'       
+
+        with open('TextbookRSA.py', 'r') as f:
+            tbrsa = f.read()
+            with open(f'{self.temp_lab_dir}/Challenge/TextbookRSA.py', 'w') as f:
+                f.write(tbrsa)
+            with open(f'{self.temp_lab_dir}/lab-input/TextbookRSA.py', 'w') as f:
+                f.write(tbrsa)
 
         return Lab(
             lab_template_id=self.lab_template_id,
@@ -205,13 +224,6 @@ class RSALabTemplate(LabTemplate):
         cx2Plain = generateString(25)
         cipher = PKCS1_OAEP.new(publicKey, randfunc=random.randbytes)
         solution = ""
-
-        with open(f"{labInput}/TextbookRSA.py", "w") as f:
-            with open('main.py', 'r') as g:
-                lines = g.readlines()
-                f.write('import sys\n\n')
-                for i in range(27, 88):
-                    f.write(lines[i])
 
         # CX
         # part a is textbook rsa, part b is with PKCS1.5 and part C is OAEP
@@ -254,11 +266,11 @@ class RSALabTemplate(LabTemplate):
 
         
         boooool = random.random() < 0.5
-        with open(f"{labInput}/ma1", "w") as f:
+        with open(f"{labInput}/m1", "w") as f:
             f.write(boooool and cx1Plain or generateString(25))
             f.close()
 
-        with open(f"{labInput}/mb1", "w") as f:
+        with open(f"{labInput}/m2", "w") as f:
             f.write(not boooool and cx2Plain or generateString(25))
             f.close()
         with open(f"{labInput}/d1", "wb") as f:
@@ -305,7 +317,7 @@ class RSALabTemplate(LabTemplate):
         # for this question we are required to use TEXTBOOK rsa encryption. Different from the previous warmup questions.
         # keyPair = RSA.generate(2048)  # easy key gen
         # this is our textbook encryption thing
-        publicKey = rsa.PublicKey(keyPair.n, keyPair.e)
+        publicKey = rsa.PublicKey(keyPair2.n, keyPair2.e)
         # publicKey = keyPair.public_key() # the commented section is for OAEP, we do not use this in this question.
         # cipher = PKCS1_OAEP.new(publicKey)
 
@@ -350,9 +362,7 @@ class RSALabTemplate(LabTemplate):
                     f.close()
 
                 with open(f"{cipherDir}/ciphertext {ciphername}.txt", "wb") as f:
-                    # f.write(cipher.encrypt(para.encode("utf-8"))) # this is for OAEP
-                    # this is for Textbook
-                    f.write(TextbookRSA.encrypt(para.encode("utf-8"), publicKey))
+                    f.write(TextbookRSA.encrypt(bytes(para, "utf-8"), publicKey))
                     f.close()
                 matching_pair_3 = (ciphername, plainname)
                 if i == 0:
@@ -399,7 +409,7 @@ class RSALabTemplate(LabTemplate):
                 if i == 6 or i == 7:
                     # 12 random bits followed by four zero bits for padding
                     what = chr(random.randint(0, 255)) + chr(random.randint(0,15) << 4)
-                                    # 8 bits                 # 4 bits             # 4 zero bits
+
                     matching_pair_6 = (ciphername, plainname)
                     if i == 6:
                         solution5 += f'plaintext {matching_pair_6[1]}.txt,ciphertext {matching_pair_6[0]}.txt;'
@@ -415,7 +425,7 @@ class RSALabTemplate(LabTemplate):
                 if i == 10 or i == 11:
                     # 20 random bits followed by four zero bits for padding
                     what = chr(random.randint(0, 255)) + chr(random.randint(0, 255)) + chr(random.randint(0,15) << 4)
-            
+
                     matching_pair_8 = (ciphername, plainname)
                     if i == 10:
                         solution5 += f'plaintext {matching_pair_8[1]}.txt,ciphertext {matching_pair_8[0]}.txt;'
@@ -447,36 +457,101 @@ class RSALabTemplate(LabTemplate):
             f.write(
                 f"Plaintext,Ciphertext\nplaintext {matching_pair_3[1]}.txt,ciphertext {matching_pair_3[0]}.txt")
             f.close()
-        with (open(f"{labInput}/pair1-1.csv", "w")) as f:
+        with (open(f"{labInput}/pair4-1.csv", "w")) as f:
             f.write(
                 f"Plaintext,Ciphertext\nplaintext {matching_pair_4[1]}.txt,ciphertext {matching_pair_4[0]}.txt")
             f.close()
-        with (open(f"{labInput}/pair2-1.csv", "w")) as f:
+        with (open(f"{labInput}/pair8-1.csv", "w")) as f:
             f.write(
                 f"Plaintext,Ciphertext\nplaintext {matching_pair_5[1]}.txt,ciphertext {matching_pair_5[0]}.txt")
             f.close()
-        with (open(f"{labInput}/pair3-1.csv", "w")) as f:
+        with (open(f"{labInput}/pair12-1.csv", "w")) as f:
             f.write(
                 f"Plaintext,Ciphertext\nplaintext {matching_pair_6[1]}.txt,ciphertext {matching_pair_6[0]}.txt")
             f.close()
-        with (open(f"{labInput}/pair4-1.csv", "w")) as f:
+        with (open(f"{labInput}/pair16-1.csv", "w")) as f:
             f.write(
                 f"Plaintext,Ciphertext\nplaintext {matching_pair_7[1]}.txt,ciphertext {matching_pair_7[0]}.txt")
             f.close()
-        with (open(f"{labInput}/pair5-1.csv", "w")) as f:
+        with (open(f"{labInput}/pair20-1.csv", "w")) as f:
             f.write(
                 f"Plaintext,Ciphertext\nplaintext {matching_pair_8[1]}.txt,ciphertext {matching_pair_8[0]}.txt")
             f.close()
-
-        with (open(f"{labInput}/ciphertexts.csv", "w")) as f:
-            f.write(ciphetextcsvFile)
+        
+        with open(f"{labInput}/e2", "wb") as f:
+            f.write(keyPair2.public_key().export_key())
             f.close()
 
-        with (open(f"{labInput}/plaintexts.csv", "w")) as f:
-            f.write(plaintextcsvFile)
+        with open(f"{labInput}/n2", "w") as f:
+            f.write(str(keyPair2.n))
             f.close()
 
         return solution3, solution4, solution5
+    
+    def sec6(self):
+        # Challenge Problem
+        sys.byteorder='big'
+        challenge = self.temp_lab_dir / "Challenge"
+        if not os.path.exists(challenge):
+            os.mkdir(challenge)
+        keyPair = RSA.generate(2048)
+        publicKey = keyPair.public_key()
+
+        # Creates Oracle for attack that acts as pseudo side channel
+        with open('Padding_Check.py', 'r') as f:
+            check = f.read()
+            check = check.replace('00', str(frombytes(keyPair.export_key())))
+            with open(f'{challenge}/Padding_Check.py', 'w') as f:
+                f.write(check)
+
+        # Compiles Oracle so private key not plainly visible in oracle        
+        if os.path.exists(f'{challenge}/Padding_Check.pyc'):
+            os.remove(f'{challenge}/Padding_Check.pyc')
+        py_compile.compile(f'{challenge}/Padding_Check.py', cfile=f'{challenge}/Padding_Check.pyc')
+        os.remove(f'{challenge}/Padding_Check.py')
+
+        with open(f"{challenge}/e3", "wb") as f:
+            f.write(keyPair.public_key().export_key())
+            f.close()
+
+        with open(f"{challenge}/n3", "w") as f:
+            f.write(str(keyPair.n))
+            f.close()
+
+        solution = ''
+        for i in range(1,3):
+            plain = generateString(247)
+            with open(f'{challenge}/p64-{i}', 'w') as f:
+                if i == 1:
+                    f.write(plain)
+                else:
+                    solution += f'{plain}|\0\1|'
+                f.close()
+
+            pad = random.randbytes(8)
+            para = b'\x02' + pad + bytes(plain, 'utf-8')
+        
+            with open(f'{challenge}/c64-{i}', 'wb') as f:
+                f.write(TextbookRSA.encrypt(para, publicKey))
+                f.close()
+
+            plain = generateString(243)
+            with open(f'{challenge}/p96-{i}', 'w') as f:
+                if i == 1:
+                    f.write(plain)
+                else:
+                    solution += plain
+                f.close()
+
+            pad = random.randbytes(12)
+            para = b'\x02' + pad + bytes(plain, 'utf-8')
+            with open(f'{challenge}/c96-{i}', 'wb') as f:
+                f.write(TextbookRSA.encrypt(para, publicKey))
+                f.close()
+
+        return solution
+            
+
 
 class spoof:
     def __init__(self, f) -> None:

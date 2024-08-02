@@ -46,10 +46,10 @@ class TLSLabTemplate(LabTemplate):
         total_certs = 9
         submitted_solution_nums = submitted_solution.split("_")
         solution_nums = solution.split("_")
-        if set(submitted_solution_nums) != set([str(x) for x in range(0, total_certs)]):
+        if set(submitted_solution_nums) != {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'}:
             return Grade(
                 score=0,
-                feedback=f"Solution must be in form of 0_1_2_3 and each directory 0-8 must be used once."
+                feedback=f"Solution must be in form of A_B_C_D and each directory A-I must be used once."
             )
         else:
             score: float = 0
@@ -72,9 +72,10 @@ class TLSLabTemplate(LabTemplate):
         shuffled_client_cert_dirs = list(self.client_cert_dirs)
         random.shuffle(shuffled_client_cert_dirs)
         # Solution is valid, expired, invalid_ca, invalid_cn
+        letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
         solution = "_".join(
-            str(shuffled_client_cert_dirs.index(x)) for x in self.client_cert_dirs
-        )
+            str(letters[shuffled_client_cert_dirs.index(x)]) for x in self.client_cert_dirs
+            )
         # Don't cover this since this is never called unless a developer manually sets it
         if debug:  # pragma: no cover
             # For debugging - don't rename dirs
@@ -88,11 +89,11 @@ class TLSLabTemplate(LabTemplate):
             
             # Rename the cert paths to match the solution
             for i, cert_dir_path in enumerate(shuffled_client_cert_dirs):
-                if os.path.exists(str(cert_dir_path.parent / str(i))):
+                if os.path.exists(str(cert_dir_path.parent / letters[i])):
                     shutil.rmtree(str(cert_dir_path))
                 else:
                     shutil.move(str(cert_dir_path), str(
-                    cert_dir_path.parent / str(i)))
+                    cert_dir_path.parent / letters[i]))
 
         # Copy the question folder into the directory that will be given to users
         if not os.path.exists(self.generated_dir / "lab" / "question"): 

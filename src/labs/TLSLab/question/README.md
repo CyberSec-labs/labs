@@ -43,7 +43,7 @@ At this point:
 The goal of this lab is to submit, as a solution, the directories of the certificates in order.
 The specific order is as follows:
 
-```<correct_cert>_<expired_cert>_<invalid_cert>_<invalid_cn>_<invalid_md5>_...```
+```<correct_cert_dir>_<expired_cert_dir>_<invalid_cert_dir>_<invalid_cn_dir>_<invalid_md5_dir>_...```
 
 The order is as follows:
 
@@ -105,7 +105,7 @@ python3 client.py
 
 Submit your solution as described above and again here:
 
-```<correct_cert>_<expired_cert>_<invalid_cert>_<invalid_cn>_<invalid_md5>_...```
+```<correct_cert_dir>_<expired_cert_dir>_<invalid_cert_dir>_<invalid_cn_dir>_<invalid_md5_dir>_...```
 
 The order is as follows:
 

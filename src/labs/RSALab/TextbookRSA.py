@@ -4,11 +4,9 @@ class PublicKey:
     e: int
     n: int
 
-
 class PrivateKey:
     d: int
     n: int
-
 
 def frombytes(bytes: bytes):
     """Internal function, should not be used
