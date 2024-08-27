@@ -11,6 +11,9 @@ import sys
 import binascii
 import os
 
+from fastapi import UploadFile
+import zipfile
+
 from src.utils import Grade, LabTemplate, Lab, CLIHandler
 
 # files needed: 
@@ -50,13 +53,31 @@ class PasswordLabLabTemplate(LabTemplate):
     static_dir: Path = Path(__file__).parent
 
     @staticmethod
-    def _grade(submitted_solution: str, solution: str) -> Grade:
+    def _grade(submitted_solution: str, solution: str, file: UploadFile) -> Grade:
         """Grades a submissions
         """
 
+        solutions = solution.split('_')
+        files = zipfile.ZipFile(file.file)
+        base_dir = files.filelist[0].filename
 
-        score = 0
-        feedback = "example"
+        score = 0.0
+        feedback = ""
+
+        # number of questions + 1 due to solutions[0] = ''
+        logins = len(solutions)
+
+        for i in range(1, logins):
+            try:
+                with open(f'{base_dir}Login_{i}.csv', 'r') as f:
+                    answer = f.read()
+                if answer == solutions[i]:
+                    score += 100/(logins-1)
+                else:
+                    feedback+= f'Login_{i}.csv credentials are incorrect.\n' 
+            except:
+                feedback+= f'Missing Login_{i}.csv from submission folder.\n'
+        score = round(score)
 
         return Grade(score=score, feedback=feedback)
 
@@ -65,9 +86,8 @@ class PasswordLabLabTemplate(LabTemplate):
         random.seed(seed)
         solution = ""
         for i in range(6):
-            if os.path.exists(f"{self.temp_lab_dir}/Q{i + 1}"):
-                shutil.rmtree(f"{self.temp_lab_dir}/Q{i + 1}")
-            os.mkdir(f"{self.temp_lab_dir}/Q{i + 1}")
+            if not os.path.exists(f"{self.temp_lab_dir}/Q{i + 1}"):
+                os.mkdir(f"{self.temp_lab_dir}/Q{i + 1}")
             if i ==0:
                 py_compile.compile(f"{self.static_dir}/Login.py", f"{self.temp_lab_dir}/Q{i+1}/Login.pyc")
             else:
@@ -129,8 +149,9 @@ class PasswordLabLabTemplate(LabTemplate):
         shutil.copy(f"{self.static_dir}/PwnedPWs100k", f"{self.temp_lab_dir}/Q5/PwnedPWs100k")
         shutil.copy(f"{self.static_dir}/PwnedPWs100k", f"{self.temp_lab_dir}/Q6/PwnedPWs100k")
 
-        for i in range(0, 6):
-            solution = solution + f"_{gang[i]}\0\1{pwd[i]}"
+        solution += f'_{pwd[0]}'
+        for i in range(1, 6):
+            solution = solution + f"_{gang[i]},{pwd[i]}"
 
         for i in range(6, len(gang)):
             pwd.append(''.join(random.choices(string.ascii_uppercase +
@@ -197,7 +218,7 @@ class PasswordLabLabTemplate(LabTemplate):
             SaltedPWs.writelines(q6)
         SaltedPWs.close()
 
-        py_compile.compile("utils/Login.py", "utils/Login.pyc")
+        py_compile.compile("Login.py", "Login.pyc")
         
         return Lab(
             lab_template_id=self.lab_template_id,
@@ -244,7 +265,8 @@ def main(args: list[str]):
             verbose=True             # Print status messages to stdout (optional)
         )
         with open(a, "rb") as f:
-            print(PasswordLabLabTemplate().grade("", template, spoof(f)))
+            result = PasswordLabLabTemplate().grade("", template, spoof(f))
+            print(f'Score:\n{result.score}\nFeedback:\n{result.feedback}')
         os.remove(toDelete)
 
 if __name__ == "__main__":

@@ -42,44 +42,46 @@ class DownloadLab(LabTemplate):
 
         score = 0
         solutions = solution.split("_")
-        # print(file.file)
         files = zipfile.ZipFile(file.file)
         base_dir = files.filelist[0].filename
         feedback = ""
 
         # section 1
         try:
-            f = files.read(f"{base_dir}/solution_1.txt")
+            f = files.read(f"{base_dir}solution_1.txt").decode('utf-8')
 
             if f == solutions[0]:
-                score = 25
+                score += 25
             else:
-                feedback = feedback + "Question 1 solution is incorrect."
+                feedback = feedback + "Question 1 solution is incorrect.\n"
         except KeyError:
             feedback = feedback + "Missing solution_1.txt from uploaded zip archive.\n"
 
         # section 2
         """"""
         expectedFiles = solutions[1].split(".")
-        correct = 0 
-        list = 0
-        # print(files.read("1.txt"))
-        for name in expectedFiles:
-            list = list + 1
+        correct = 0
+        incorrect = 0 
+        q2_sols = len(expectedFiles)
+        # Makes sure the only files submitted for q2 are the correct ones
+        for num in range(10):
             try:
-                f = files.read(f"{base_dir}{name}.txt")
-                correct = correct + 1
-            except Exception as ee:
-                print(ee)
-                pass
+                f = files.read(f"{base_dir}{num}.txt")
+            except:
+                continue
+            if str(num) in expectedFiles:
+                correct += 1
+            else:
+                incorrect += 1
         
-        if list != correct:
-            feedback = feedback + f"{abs(list - correct)} are incorrect.\n"
+        if correct == q2_sols and incorrect == 0:
+            score += 75
         else:
-            feedback = feedback + f"Question 2 correct.\n"
+            feedback = feedback + f"Question 2 solution is incorrect.\n"
+        
         """"""
 
-        return Grade(score=score, feedback=feedback)
+        return Grade(score=int(score), feedback=feedback)
 
     def generate_lab(self, *, user_id: int = 0, seed: str = "abcd", debug: bool = False) -> Lab:  # type: ignore
 
@@ -157,7 +159,6 @@ class DownloadLab(LabTemplate):
                 file_2.write(
                     random.randbytes(256)
                 )  # if we want the file sig to not match we just generate random bytes instead
-        print(qSolution)
         return qSolution[:-1]
 
     def sec3(self):
@@ -174,13 +175,12 @@ class DownloadLab(LabTemplate):
             os.mkdir(f"{self.temp_lab_dir}/Q3files/inputs")
 
         a = 1
-        for i in range(100_000, 1_000_000, 100_000):
+        for i in range(100_000, 1_100_000, 100_000):
             bytez = random.getrandbits(i * 8).to_bytes(i, "little")
-            with open(f"{self.temp_lab_dir}/Q3files/inputs/{a}.txt", "w+b") as f:
+            with open(f"{self.temp_lab_dir}/Q3files/inputs/{a}00k.txt", "w+b") as f:
                 f.write(bytez)
                 f.close()
             a = a + 1
-        pass
 
 class spoof:
     def __init__(self, f) -> None:
@@ -218,7 +218,8 @@ def main(args: list[str]):
             verbose=True             # Print status messages to stdout (optional)
         )
         with open(a, "rb") as f:
-            print(DownloadLab().grade("", template, spoof(f)))
+            results = DownloadLab().grade("", template, spoof(f))
+            print(f'Score:\n{results.score}\nFeedback:\n{results.feedback}')
         os.remove(toDelete)
 
 if __name__ == "__main__":

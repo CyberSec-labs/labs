@@ -33,22 +33,22 @@ Submit both the matching hash h2b.txt, and f2b.txt in your submissions folder.
 For question 3, locate the following files in your `q3` subdirectory:
 
 - f3a.txt
-- h3a.txt
+- h3.txt
 
-You will find that f3a.txt has 25 randomly generated characters on line 1, followed by "replace this with your matching string" on line 2. Proceeded by 25 more randomly generated characters on line 3. 
+You will find that f3a.txt consists of three lines of text. However, you will only want to edit the second line of the file by replacing the text that is there with your own string. 
 
-h3a.txt is the hash of this entire file (f3a.txt) in internet checksum.
+h3.txt is the hash of this entire file (f3a.txt) in internet checksum.
 
-Your goal is to write a program that replaces the second line with a different string while still producing the same hash result given in h3a.txt, which is the initial hash of the file f3a.txt.
+Your goal is to write a program that creates the file f3b.txt, which is identical to f3a.txt besides the second line and should have the same checksum value. 
 
-Submit your modified f3a.txt file.
+Submit your f3b.txt file.
 
 ## Question 4
 For question 3, locate the following files in your `q4` subdirectory:
 
-- f4b.html
+- f4a.html
 
-Opening up f4b in the browser, you see a simple web page with some text on it.
+Opening up f4a in the browser, you see a simple web page with some text on it.
 
 Your goal is to change how the webpage functions. 
 
@@ -56,4 +56,4 @@ Open the file in your code editor of choice and locate the `<script>` tag.
 
 You will see an if statement in it. You want to change that so that the overall checksum of the file is the same, but the if statement fails. If the if statement evaluates to false, something else should be displayed on the webpage instead. That is your goal. 
 
-Submit your modified f4b.html file in your submissions folder when finished. 
+You will submit f4b.html, which will be your modified version of f4a.html.

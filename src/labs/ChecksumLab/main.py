@@ -15,7 +15,7 @@ from Crypto.Cipher import AES, PKCS1_OAEP
 from fastapi import UploadFile
 # from utils import Grade, LabTemplate, Lab
 from src.utils import Grade, LabTemplate, Lab, CLIHandler
-
+import io
 
 
 
@@ -82,19 +82,19 @@ class Lab3LabTemplate(LabTemplate):
 
         # for question 1
         try:
-            f = files.read(f"{base_dir}/h1b.txt")
+            f = files.read(f"{base_dir}h1b.txt").decode('utf-8')
 
             if f == solutions[0]:
                 score = 25
             else:
                 feedback = feedback + "Question 1 solution is incorrect.\n"
         except KeyError:
-            feedback = feedback + "Missing solution_1.txt from uploaded zip archive.\n"
+            feedback = feedback + "Missing h1b.txt from uploaded zip archive.\n"
 
         # for question 2
         try:
-            f2b = files.read(f"{base_dir}/f2b.txt")
-            submittedHash = files.read(f"{base_dir}/h2b.txt")
+            f2b = files.read(f"{base_dir}f2b.txt").decode('utf-8')
+            submittedHash = files.read(f"{base_dir}h2.txt").decode('utf-8')
             sol2 = solutions[1]
 
             temp = sol2.split("|\0\1|")
@@ -114,29 +114,34 @@ class Lab3LabTemplate(LabTemplate):
 
         except KeyError:
             feedback = (
-                feedback + "Missing f2b.txt or h2b.txt from uploaded zip archive.\n"
+                feedback + "Missing f2b.txt or h2.txt from uploaded zip archive.\n"
             )
 
         # for question 3
-
         try:
-            f = files.read(f"{base_dir}/f3a.txt")
-
-            if toInternetChecksum(f) == solutions[2]:
-                if f.find("replace this with your matching string") == -1:
-                    score = score + 25
+            with io.TextIOWrapper(files.open(f"{base_dir}f3b.txt"), encoding="utf-8") as f:
+                f = f.read()
+            sol3 = solutions[2]
+            split = sol3.split("|\0\1|")
+            if toInternetChecksum(f) == split[2]:
+                if (f.find(f'Do not change this line: {split[0]}')!=-1) and (f.find(f'Do not change this line: {split[1]}')!=-1):
+                    if f.find("replace this with your matching string") == -1:
+                        score = score + 25
+                    else:
+                        feedback = feedback + "No modification detected.\n"
                 else:
-                    feedback = feedback + "No modification to f3a.txt present.\n"
+                    feedback += "Unauthorized modification made to line 1 or 3 in question 3.\n"
             else:
                 feedback = (
                     feedback + "Question 3 solution is incorrect. Hash does not match\n"
                 )
         except KeyError:
-            feedback = feedback + "Missing f3a.txt from uploaded zip archive.\n"
+            feedback = feedback + "Missing f3b.txt from uploaded zip archive.\n"
 
         # question 4
         try:
-            f = files.read(f"{base_dir}/f4b.html")
+            with io.TextIOWrapper(files.open(f"{base_dir}f4b.html"), encoding="utf-8") as f:
+                f = f.read()
             sol4 = solutions[3]
             split = sol4.split("|\0\1|")
             checkIfExists = split[0]
@@ -159,9 +164,8 @@ class Lab3LabTemplate(LabTemplate):
         random.seed(seed)
 
         for i in range(4):
-            if os.path.exists(f"{self.temp_lab_dir}/q{i + 1}"):
-                shutil.rmtree(f"{self.temp_lab_dir}/q{i + 1}")
-            os.mkdir(f"{self.temp_lab_dir}/q{i + 1}")
+            if not os.path.exists(f"{self.temp_lab_dir}/q{i + 1}"):
+                os.mkdir(f"{self.temp_lab_dir}/q{i + 1}")
 
         solution = self.sec1()
         solution = solution + "_" + self.sec2()
@@ -227,33 +231,34 @@ class Lab3LabTemplate(LabTemplate):
 
     def sec3(self):
         f3a = open(f"{self.temp_lab_dir}/q3/f3a.txt", "w+")
-        h3a = open(f"{self.temp_lab_dir}/q3/h3a.txt", "w+")
+        h3 = open(f"{self.temp_lab_dir}/q3/h3.txt", "w+")
 
+        s1 = generateString(25)
+        s2 = generateString(25)
         content = (
-            generateString(25)
-            + "\n"
+            "Do not change this line: " + s1 + "\n"
             + "replace this with your matching string\n"
-            + generateString(25)
+            + "Do not change this line: " + s2
         )
 
         f3a.write(content)
-        h3a.write(toInternetChecksum(content))
+        h3.write(toInternetChecksum(content))
 
         f3a.close()
-        h3a.close()
+        h3.close()
 
-        return toInternetChecksum(content)
+        return s1 + "|\0\1|" + s2 + "|\0\1|"+ toInternetChecksum(content) 
 
     def sec4(self):
         # clone files
-        with open(f"{self.static_dir}/f4b_template.html", "r") as file:
+        with open(f"{self.static_dir}/f4_template.html", "r") as file:
             content = file.read()
             file.close()
 
         toChange = generateString(25)
         content = content.replace("%%IfStatementValue%%", toChange)
 
-        with open(f"{self.temp_lab_dir}/q4/f4b.html", "w+") as file:
+        with open(f"{self.temp_lab_dir}/q4/f4a.html", "w+") as file:
             file.write(content)
             file.close()
 
@@ -293,7 +298,8 @@ def main(args: list[str]):
             verbose=True             # Print status messages to stdout (optional)
         )
         with open(a, "rb") as f:
-            print(Lab3LabTemplate().grade("", template, spoof(f)))
+            results = Lab3LabTemplate().grade("", template, spoof(f))
+            print(f'Score:\n{results.score}\nFeedback:\n{results.feedback}')
         os.remove(toDelete)
 
 if __name__ == "__main__":
